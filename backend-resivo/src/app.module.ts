@@ -18,9 +18,7 @@ import { ProductoModule } from './producto/producto.module.js';
       username: process.env.DB_USER ?? 'postgres',
       password: process.env.DB_PASSWORD ?? 'postgres',
       database: process.env.DB_NAME ?? 'resivo',
-      // registers every entity that a module declares with TypeOrmModule.forFeature([...])
       autoLoadEntities: true,
-      // creates/updates the tables from the entities (ok for the TP, real projects use migrations)
       synchronize: true,
     }),
     ResivoModule,

@@ -13,10 +13,13 @@ export class Producto {
   @Column()
   cantidad!: number;
 
-  @Column()
+  @Column({ type: 'double precision' })
   precio!: number;
 
-  @ManyToOne('Resivo', (resivo: Resivo) => resivo.productos)
+  @ManyToOne('Resivo', (resivo: Resivo) => resivo.productos, {
+    nullable: false,
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'resivo_id' })
   resivo!: Relation<Resivo>;
 }

@@ -18,4 +18,11 @@ export class Resivo {
 
   @OneToMany('Producto', (producto: Producto) => producto.resivo)
   productos!: Relation<Producto[]>;
+
+  get total(): number {
+    return this.productos?.reduce(
+      (total, producto) => total + producto.cantidad * producto.precio,
+      0,
+    ) ?? 0;
+  }
 }

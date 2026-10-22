@@ -1,124 +1,197 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Backend Resivo
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API REST para registrar **recibos de compra** y los **productos** de cada uno. Hecha con NestJS,
+TypeORM y PostgreSQL para el TP de Tecnologías Web (TUARI, UNICEN).
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Modelo de datos
 
-## Description
+Un recibo tiene muchos productos, y cada producto pertenece a un solo recibo (relación 1 a N).
+Cada fila de `producto` guarda el `resivo_id` del recibo al que pertenece.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
-
-```bash
-$ npm install
+```mermaid
+erDiagram
+    RESIVO ||--o{ PRODUCTO : "tiene"
+    RESIVO {
+        int id PK
+        string nombre "nombre del local"
+        date tiempoCompra
+        string metodoPago
+    }
+    PRODUCTO {
+        int id PK
+        string nombre
+        int cantidad
+        double precio
+        int resivo_id FK
+    }
 ```
 
-## Compile and run the project
+- El **total** del recibo no se guarda en la base: se calcula al devolver el recibo, sumando
+  `cantidad × precio` de sus productos.
+- Al **borrar un recibo** se borran también sus productos (`ON DELETE CASCADE`).
+
+## Requisitos
+
+- Node.js 24 o superior
+- Docker (para la base de datos)
+
+## Cómo levantarlo
+
+### 1. Instalar dependencias
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm install
 ```
 
-## Run tests
+### 2. Levantar PostgreSQL con Docker
+
+Desde esta carpeta (`backend-resivo/`):
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+docker compose up -d
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Para detener la base:
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+docker compose down
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Observability
-
-In production applications, observability is essential for understanding how your system behaves, detecting issues early, and maintaining reliable performance.
-
-[NestJS Observe](https://observe.nestjs.com) automatically instruments your NestJS application, giving you deep visibility into your system with minimal setup:
-
-- **Distributed tracing:** Follow requests across services and understand how they flow through your system.
-- **Waterfall analysis:** Visualize request execution and identify slow operations, bottlenecks, and unexpected delays.
-- **Performance analysis:** Analyze application performance in real time and quickly pinpoint areas that need optimization.
-- **Metrics:** Track key application and infrastructure metrics to understand system health and performance trends.
-- **Logging:** Centralize and correlate logs with traces and other telemetry to make debugging easier.
-- **Error tracking:** Detect errors quickly and investigate their root causes with the surrounding context.
-- **SLA monitoring:** Track service-level objectives and identify when your application is approaching or exceeding defined thresholds.
-- **Alarms and alerts:** Set up alerts for critical errors, performance degradation, SLA violations, and other anomalies so your team can react quickly.
-
-To add it to this project:
+Para detenerla y borrar también los datos:
 
 ```bash
-$ npm install @nestjs/observe
+docker compose down -v
 ```
 
-Then follow the [setup guide](https://docs.nestjs.com/observability/overview) - it takes a single import and an app key.
+### 3. Variables de entorno
 
-The free plan needs no payment details and covers 300,000 events a month. You can also browse the [live demo](https://www.observe-demo.nestjs.com/dashboard) first - the whole dashboard over a busy service's data, with nothing to install.
+La conexión a la base se configura con variables de entorno. Están listadas en `.env.example`.
+Si una variable no está definida, se usa el valor por defecto, que coincide con el
+`docker-compose.yml`, así que para desarrollo local no hace falta definir ninguna.
 
-## Resources
+| Variable      | Por defecto | Descripción              |
+| ------------- | ----------- | ------------------------ |
+| `PORT`        | `3000`      | Puerto de la API         |
+| `DB_HOST`     | `localhost` | Host de PostgreSQL       |
+| `DB_PORT`     | `5432`      | Puerto de PostgreSQL     |
+| `DB_USER`     | `postgres`  | Usuario de PostgreSQL    |
+| `DB_PASSWORD` | `postgres`  | Contraseña de PostgreSQL |
+| `DB_NAME`     | `resivo`    | Nombre de la base        |
 
-Check out a few resources that may come in handy when working with NestJS:
+### 4. Ejecutar la API
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Auto-instrument your application with [NestJS Observe](https://observe.nestjs.com). Distributed tracing, metrics, and logging made easy. Error tracking and performance monitoring for your NestJS applications.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```bash
+# desarrollo (se reinicia sola con cada cambio)
+npm run start:dev
 
-## Support
+# producción
+npm run build
+npm run start:prod
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+La API queda disponible en `http://localhost:3000`. Las tablas se crean solas al arrancar
+(`synchronize: true` de TypeORM).
 
-## Stay in touch
+## Endpoints
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### Recibos (`/resivo`)
 
-## License
+| Método   | Ruta                   | Descripción                                    | Respuesta OK |
+| -------- | ---------------------- | ---------------------------------------------- | ------------ |
+| `GET`    | `/resivo`              | Lista todos los recibos con sus productos y total | 200       |
+| `GET`    | `/resivo?nombre=texto` | Filtra los recibos cuyo nombre contiene `texto` | 200         |
+| `GET`    | `/resivo/buscar?nombre=texto` | Busca recibos por nombre, sin distinguir mayúsculas | 200 |
+| `GET`    | `/resivo/:id`          | Un recibo con sus productos y total            | 200          |
+| `POST`   | `/resivo`              | Crea un recibo                                 | 201          |
+| `PATCH`  | `/resivo/:id`          | Modifica uno o más campos de un recibo         | 200          |
+| `DELETE` | `/resivo/:id`          | Borra un recibo y sus productos                | 200          |
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Body de `POST /resivo` (en `PATCH` todos los campos son opcionales):
+
+```json
+{
+  "nombre": "Kiosco El Sol",
+  "tiempoCompra": "2026-10-18",
+  "metodoPago": "Efectivo"
+}
+```
+
+Respuesta de `GET /resivo/:id`:
+
+```json
+{
+  "id": 4,
+  "nombre": "Kiosco El Sol",
+  "tiempoCompra": "2026-10-18",
+  "metodoPago": "Efectivo",
+  "productos": [
+    { "id": 5, "nombre": "Coca-Cola 1.5L", "cantidad": 2, "precio": 2500 },
+    { "id": 6, "nombre": "Alfajor Jorgito", "cantidad": 3, "precio": 800 }
+  ],
+  "total": 7400
+}
+```
+
+### Productos (`/producto`)
+
+| Método   | Ruta                     | Descripción                                     | Respuesta OK |
+| -------- | ------------------------ | ----------------------------------------------- | ------------ |
+| `GET`    | `/producto`              | Lista todos los productos con su recibo         | 200          |
+| `GET`    | `/producto?nombre=texto` | Filtra los productos cuyo nombre contiene `texto` | 200        |
+| `GET`    | `/producto/buscar?nombre=texto` | Busca productos por nombre, sin distinguir mayúsculas | 200 |
+| `GET`    | `/producto/:id`          | Un producto con su recibo                       | 200          |
+| `POST`   | `/producto`              | Crea un producto dentro de un recibo            | 201          |
+| `PATCH`  | `/producto/:id`          | Modifica uno o más campos de un producto        | 200          |
+| `DELETE` | `/producto/:id`          | Borra un producto                               | 200          |
+
+Body de `POST /producto` (en `PATCH` todos los campos son opcionales):
+
+```json
+{
+  "nombre": "Coca-Cola 1.5L",
+  "cantidad": 2,
+  "precio": 2500,
+  "resivoId": 4
+}
+```
+
+## Validaciones y errores
+
+Los bodies se validan con `class-validator`. Los campos que no están en el DTO se descartan.
+
+| Código | Cuándo                                                                     |
+| ------ | -------------------------------------------------------------------------- |
+| `400`  | Body inválido (campo faltante, vacío, tipo incorrecto, número no positivo) |
+| `400`  | El `:id` de la ruta no es un número (ej. `/resivo/abc`)                    |
+| `404`  | No existe el recibo o producto con ese `:id`                               |
+| `404`  | Se crea o mueve un producto a un `resivoId` que no existe                  |
+
+Ejemplo de respuesta `400`:
+
+```json
+{
+  "message": ["nombre should not be empty", "tiempoCompra must be a valid ISO 8601 date string"],
+  "error": "Bad Request",
+  "statusCode": 400
+}
+```
+
+## Estructura
+
+```
+src/
+├── main.ts                 # arranque y ValidationPipe global
+├── app.module.ts           # conexión a PostgreSQL (TypeORM)
+├── resivo/
+│   ├── entities/           # entidad Resivo (cálculo del total)
+│   ├── dto/                # CreateResivoDto, UpdateResivoDto
+│   ├── resivo.controller.ts
+│   ├── resivo.service.ts
+│   └── resivo.module.ts
+└── producto/
+    ├── entities/           # entidad Producto (relación con Resivo)
+    ├── dto/                # CreateProductoDto, UpdateProductoDto
+    ├── producto.controller.ts
+    ├── producto.service.ts
+    └── producto.module.ts  # importa ResivoModule para validar el resivoId
+```
