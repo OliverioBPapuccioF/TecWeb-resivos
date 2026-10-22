@@ -1,0 +1,63 @@
+# compiled output
+backend-resivo/dist
+backend-resivo/node_modules
+backend-resivo/build
+
+# TypeScript build cache
+*.tsbuildinfo
+
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# OS
+.DS_Store
+
+# Tests
+backend-resivo/coverage
+backend-resivo/.nyc_output
+
+# IDEs and editors
+backend-resivo/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+backend-resivo/.vscode/*
+!backend-resivo/.vscode/settings.json
+!backend-resivo/.vscode/tasks.json
+!backend-resivo/.vscode/launch.json
+!backend-resivo/.vscode/extensions.json
+
+# dotenv environment variable files
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+# temp directory
+.temp
+.tmp
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Diagnostic reports (https://nodejs.org/api/report.html)
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+
+.vscode
+.claude
