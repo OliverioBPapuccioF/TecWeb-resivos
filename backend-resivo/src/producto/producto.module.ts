@@ -13,6 +13,6 @@ import { ResivoModule } from '../resivo/resivo.module.js';
   imports: [TypeOrmModule.forFeature([Producto]), ResivoModule],
   controllers: [ProductoController],
   providers: [ProductoService],
-  exports: [ProductoService]
+  exports: [ProductoService],
 })
 export class ProductoModule {}

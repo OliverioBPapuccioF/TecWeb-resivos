@@ -1,6 +1,7 @@
 import { Column, Entity, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 import type { Producto } from '../../producto/entities/producto.entity.js';
 import type { Relation } from 'typeorm';
+import { redondear, subtotal } from '../../common/dinero.js';
 
 @Entity()
 export class Resivo {
@@ -11,7 +12,8 @@ export class Resivo {
   nombre!: string;
 
   @Column({ type: 'date' })
-  tiempoCompra!: Date;
+  // Postgres returns a 'date' column as text 'YYYY-MM-DD' (no time, no timezone)
+  tiempoCompra!: string;
 
   @Column()
   metodoPago!: string;
@@ -20,9 +22,12 @@ export class Resivo {
   productos!: Relation<Producto[]>;
 
   get total(): number {
-    return this.productos?.reduce(
-      (total, producto) => total + producto.cantidad * producto.precio,
-      0,
-    ) ?? 0;
+    // sum of the subtotals, rounded again (adding rounded numbers can bring the decimals back)
+    return redondear(
+      this.productos?.reduce(
+        (total, producto) => total + subtotal(producto),
+        0,
+      ) ?? 0,
+    );
   }
 }

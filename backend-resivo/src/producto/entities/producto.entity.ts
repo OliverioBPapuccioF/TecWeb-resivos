@@ -1,4 +1,10 @@
-import { Column, Entity, ManyToOne, JoinColumn, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  ManyToOne,
+  JoinColumn,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import type { Resivo } from '../../resivo/entities/resivo.entity.js';
 import type { Relation } from 'typeorm';
 

@@ -12,6 +12,6 @@ import { Resivo } from './entities/resivo.entity.js';
   imports: [TypeOrmModule.forFeature([Resivo])],
   controllers: [ResivoController],
   providers: [ResivoService],
-  exports: [ResivoService]
+  exports: [ResivoService],
 })
 export class ResivoModule {}

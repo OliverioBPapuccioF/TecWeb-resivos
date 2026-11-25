@@ -1,17 +1,17 @@
 import {
-    Controller,
-    Delete,
-    Get,
-    Post,
-    Patch,
-    Param,
-    Body,
-    ParseIntPipe,
-    Query,
+  Controller,
+  Delete,
+  Get,
+  Post,
+  Patch,
+  Param,
+  Body,
+  Query,
 } from '@nestjs/common';
+import { ParseIdPipe } from '../common/parse-id.pipe.js';
 import { ProductoService } from './producto.service.js';
 import { CreateProductoDto } from './dto/create-producto.dto.js';
-import { UpdateProductoDto } from './dto/update-producto.js';
+import { UpdateProductoDto } from './dto/update-producto.dto.js';
 
 // here the request it going to be handled by the each controller
 // and each controller is going to call the service to handle the request and return the response
@@ -19,39 +19,37 @@ import { UpdateProductoDto } from './dto/update-producto.js';
 
 @Controller('producto')
 export class ProductoController {
-    constructor(private readonly ProductoService: ProductoService) {}
-    //getAll: return a list of all producto items
-    @Get()
-    getAll(@Query('nombre') nombre?: string) {
-        return this.ProductoService.getAll(nombre);
-    }
+  constructor(private readonly productoService: ProductoService) {}
+  //getAll: return a list of all producto items (GET /producto?nombre=x filters by name)
+  @Get()
+  getAll(@Query('nombre') nombre?: string) {
+    return this.productoService.getAll(nombre);
+  }
 
-    @Get('buscar')
-    searchByName(@Query('nombre') nombre: string) {
-        return this.ProductoService.searchByName(nombre);
-    }
+  //getById: return a single producto item by id
+  @Get(':id')
+  getById(@Param('id', ParseIdPipe) id: number) {
+    return this.productoService.getById(id);
+  }
 
-    //getById: return a single producto item by id
-    @Get(':id')
-    getById(@Param('id', ParseIntPipe) id: number) {
-        return this.ProductoService.getById(id);
-    }
+  //create: create a new producto item
+  @Post()
+  create(@Body() createProductoDto: CreateProductoDto) {
+    return this.productoService.create(createProductoDto);
+  }
 
-    //create: create a new producto item
-    @Post()
-    create(@Body() createProductoDto: CreateProductoDto) {
-        return this.ProductoService.create(createProductoDto);
-    }
+  //update: update a single producto item by id
+  @Patch(':id')
+  update(
+    @Param('id', ParseIdPipe) id: number,
+    @Body() updateProductoDto: UpdateProductoDto,
+  ) {
+    return this.productoService.update(id, updateProductoDto);
+  }
 
-    //update: update a single producto item by id
-    @Patch(':id')
-    update(@Param('id', ParseIntPipe) id: number, @Body() updateProductoDto: UpdateProductoDto) {
-        return this.ProductoService.update(id, updateProductoDto);
-    }
-
-    //delete: delete a single producto item by id
-    @Delete(':id')
-    delete(@Param('id', ParseIntPipe) id: number) {
-        return this.ProductoService.delete(id);
-    }
+  //delete: delete a single producto item by id
+  @Delete(':id')
+  delete(@Param('id', ParseIdPipe) id: number) {
+    return this.productoService.delete(id);
+  }
 }
