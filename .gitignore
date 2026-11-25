@@ -39,7 +39,8 @@ backend-resivo/.vscode/*
 !backend-resivo/.vscode/extensions.json
 
 # dotenv environment variable files
-.env
+# (the .env of each folder IS committed on purpose: it is a practice project with
+# test credentials only; the *.local ones are for personal overrides)
 .env.development.local
 .env.test.local
 .env.production.local
@@ -61,5 +62,8 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 .vscode
 .claude
-# PostgreSQL data (docker-compose volume)
-/data/
+# PostgreSQL data (docker-compose bind mount)
+/database/data/
+
+# local production test of `make deploy` (credentials)
+/deploy/

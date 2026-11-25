@@ -1,0 +1,49 @@
+# Render Blueprint: deploys the API + a Render Postgres database from this repo.
+# Render reads this file from the root of the repo (Dashboard -> New -> Blueprint).
+# Reference: https://render.com/docs/blueprint-spec
+#
+# - Render does NOT use docker-compose: it builds backend-resivo/Dockerfile (the same image
+#   that `make deploy` builds and tests locally) and runs one container.
+# - The database is NOT our database/Dockerfile: it is a Postgres managed by Render.
+# - A new deploy starts on every push to the branch of the Blueprint (autoDeployTrigger).
+#
+# ⚠ Free plan: the web service sleeps after a while without requests (the first request
+#   after that takes ~1 minute), and the free database EXPIRES 30 days after it is created
+#   (14 more days of grace to upgrade it, then Render deletes it with all its data).
+
+services:
+  - type: web
+    name: resivos-api
+    runtime: docker
+    plan: free
+    # closest region to Argentina (it can not be changed after creation)
+    region: virginia
+    # monorepo: the service lives in backend-resivo/ (dockerfilePath is relative to rootDir)
+    rootDir: backend-resivo
+    dockerfilePath: ./Dockerfile
+    # GET / answers { status: 'ok' }: Render waits for it before sending traffic
+    healthCheckPath: /
+    autoDeployTrigger: commit
+    envVars:
+      # connection to the database below, through Render's private network
+      - key: DATABASE_URL
+        fromDatabase:
+          name: resivos-db
+          property: connectionString
+      # URL of the frontend allowed by CORS: Render asks for it when the Blueprint is
+      # created (put the URL of the frontend once it is deployed, e.g. https://....onrender.com)
+      - key: CORS_ORIGIN
+        sync: false
+      - key: TZ
+        value: America/Argentina/Buenos_Aires
+      # PORT is not set: Render gives one to the container and the API listens on it
+
+databases:
+  - name: resivos-db
+    plan: free
+    region: virginia
+    databaseName: resivo
+    user: resivo
+    postgresMajorVersion: "18"
+    # empty list = only internal connections (only the API can reach it, not the internet)
+    ipAllowList: []

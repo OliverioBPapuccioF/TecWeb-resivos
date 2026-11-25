@@ -1,13 +1,59 @@
-services:
+# Whole project: database + API (the frontend is added in step 20).
+#   make levantar   -> builds and starts everything
+#   make            -> list of all the commands
+#
+# Networks:
+#   red-db  = api + db   (the API reaches the database by the name of its service: "db")
+#   red-web = web        (the frontend; it does NOT see the database)
+# The browser reaches the API through the published port (localhost:3000),
+# so the frontend container does not need to be in red-db.
 
-  database:
-    image: postgres
-    restart: always
+# fixed project name: containers are resivos-db-1, resivos-api-1, ... in any folder
+name: resivos
+
+services:
+  # PostgreSQL, built from database/Dockerfile
+  db:
+    build: ./database
+    restart: unless-stopped
+    env_file: ./database/.env
     ports:
-      - 5432:5432
-    environment:
-      POSTGRES_DB: resivo
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      # published so the backend can reach it from your machine (make dev + npm run start:dev)
+      - "${DB_PORT_HOST:-5432}:5432"
     volumes:
-      - ./data:/var/lib/postgresql
+      # the data stays inside the project, in database/data (ignored by git)
+      - ./database/data:/var/lib/postgresql
+    healthcheck:
+      # ready when Postgres accepts connections ($$ = the variable of the container, not of compose)
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - red-db
+
+  # NestJS API, built from backend-resivo/Dockerfile (its healthcheck is in that Dockerfile)
+  api:
+    build: ./backend-resivo
+    restart: unless-stopped
+    # same configuration as when it runs on your machine...
+    env_file: ./backend-resivo/.env
+    # ...except what changes inside Docker: the database is the "db" service, on its
+    # internal port (always 5432, whatever DB_PORT_HOST is), and the API listens on 3000
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      PORT: 3000
+    ports:
+      - "${API_PORT_HOST:-3000}:3000"
+    depends_on:
+      # do not start the API until Postgres accepts connections
+      db:
+        condition: service_healthy
+    networks:
+      - red-db
+
+networks:
+  red-db:
+  # used by the web service (step 20)
+  red-web:

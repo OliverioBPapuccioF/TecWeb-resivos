@@ -1,0 +1,6 @@
+# the data files of Postgres must never be sent to docker build
+# (they belong to the container user, and they are not part of the image)
+data
+.env
+# helper script, runs on your machine (not inside the image)
+seed.sh
