@@ -34,8 +34,27 @@ erDiagram
 
 ## Requisitos
 
-- Node.js 24 o superior
-- Docker (para la base de datos)
+- Node.js 24 o superior (para correr el back en tu máquina)
+- Docker con Docker Compose
+- Opcionales, solo para los comandos `make`:
+  - `make`
+  - `curl` y `jq`: los usan `make seed` y `make probar`
+  - `openssl`: lo usa `make deploy` para generar la contraseña de prueba
+
+### Sin `make`
+
+Todo lo de Docker se puede hacer con `docker compose`, desde la raíz del repo:
+
+| Con `make` | Sin `make` |
+| ---------- | ---------- |
+| `make levantar` | `docker compose up -d --build --wait` |
+| `make dev` | `docker compose stop api && docker compose up -d --build --wait db` |
+| `make estado` | `docker compose ps -a` |
+| `make logs s=api` | `docker compose logs -f api` |
+| `make apagar` | `docker compose stop` |
+| `make borrar` | `docker compose down --rmi local` |
+| `make seed` | `bash database/seed.sh` |
+| `make probar` | `bash scripts/probar-api.sh http://localhost:3000` |
 
 ## Cómo levantarlo
 

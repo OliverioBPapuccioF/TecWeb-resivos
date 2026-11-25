@@ -14,7 +14,9 @@ API_PORT_HOST ?= 3000
 API ?= http://localhost:$(API_PORT_HOST)
 
 # deploy: version of the images = version of backend-resivo/package.json
-VERSION := $(shell jq -r .version backend-resivo/package.json)
+# (read with sed, available everywhere; "=" instead of ":=" so it is only read by the
+# commands that use it, not on every make)
+VERSION = $(shell sed -n 's/^ *"version": *"\([^"]*\)".*/\1/p' backend-resivo/package.json)
 PROD_PORT ?= 8080
 PROD := VERSION=$(VERSION) PROD_PORT=$(PROD_PORT) docker compose -f docker-compose.prod.yml
 
