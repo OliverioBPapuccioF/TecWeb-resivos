@@ -5,7 +5,7 @@ Consume la API REST de `backend-resivo`. TP de Tecnologías Web (TUARI, UNICEN).
 
 Pantallas: **Inicio** (`/`, últimos recibos y gráficos), **Recibos** (`/recibos`, CRUD de recibos
 y sus productos) y **Productos** (`/productos`, todos los productos). El detalle está más abajo.
-Las URLs de producción (front en Netlify y API en Render) se agregan cuando se haga el deploy.
+Deployada en **https://resivos.netlify.app** (la API, en https://resivos-api.onrender.com).
 
 ## Requisitos
 
@@ -228,6 +228,9 @@ Cada paso necesita la URL del anterior, así que van en este orden:
 2. Si la URL es otra, cambiala en `src/environments/environment.ts` → commit y push.
 3. **Netlify:** Add new project → Import an existing project → este repo (lee `netlify.toml`,
    no hace falta configurar nada). Copiá la URL del front (`https://<sitio>.netlify.app`).
+   ⚠ Los proyectos nuevos de Netlify arrancan **privados** (responden 401 y piden login de
+   Netlify): Project configuration → General → Visitor access → Project visibility →
+   **Public**.
 4. **Render** → el servicio `resivos-api` → Environment → `CORS_ORIGIN` = la URL de Netlify,
    exacta y sin `/` al final → "Save and deploy".
 5. Datos de ejemplo: `make seed API=https://<api>.onrender.com`.

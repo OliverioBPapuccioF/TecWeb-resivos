@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { environment } from '../environments/environment';
 import { InicioComponent } from './pages/inicio/inicio.component';
 import { RecibosComponent } from './pages/recibos/recibos.component';
 import { ProductosComponent } from './pages/productos/productos.component';
@@ -9,11 +10,14 @@ import { EstadisticasComponent } from './pages/example/estadisticas/estadisticas
 import { ComponentesComponent } from './pages/example/componentes/componentes.component';
 
 // Every page of the app. Each route shows its component inside the <router-outlet>
-// of AppComponent (between the menu and the footer); `title` is the title of the browser tab.
+// of AppComponent (between the menu and the footer); `title` is the title of the browser tab
+// ("Recibos · Resivos": the name of the app comes from environment.nombreApp).
+const app = environment.nombreApp;
+
 export const routes: Routes = [
-  { path: '', component: InicioComponent, title: 'Inicio · Resivos' },
-  { path: 'recibos', component: RecibosComponent, title: 'Recibos · Resivos' },
-  { path: 'productos', component: ProductosComponent, title: 'Productos · Resivos' },
+  { path: '', component: InicioComponent, title: `Inicio · ${app}` },
+  { path: 'recibos', component: RecibosComponent, title: `Recibos · ${app}` },
+  { path: 'productos', component: ProductosComponent, title: `Productos · ${app}` },
 
   // test page of the services (not in the menu): each test is a child route,
   // shown inside the <router-outlet> of ExampleComponent

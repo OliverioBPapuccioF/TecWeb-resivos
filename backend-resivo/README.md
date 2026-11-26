@@ -69,23 +69,24 @@ npm install
 Desde la **raíz del repo** (donde están `docker-compose.yml` y el `Makefile`):
 
 ```bash
-make dev        # levanta solo la base (y apaga la API de Docker, si estaba corriendo)
+make dev        # levanta solo la base (y apaga la API y el front de Docker, si estaban corriendo)
 ```
 
 La base se arma con `database/Dockerfile` (Postgres 18) y guarda sus datos en `database/data/`
 (ignorada por git). Para apagarla: `make apagar`. Para empezar con la base vacía:
 `make borrar-todo`. Para cargar datos de ejemplo (con la API levantada): `make seed`.
 
-### Todo con Docker (base + API)
+### Todo con Docker (base + API + front)
 
 ```bash
-make levantar   # construye las imágenes y levanta db + api (espera a que estén healthy)
+make levantar   # construye las imágenes y levanta db + api + web (espera a que estén healthy)
 make estado     # contenedores y su estado
 make logs s=api # logs de la API
 ```
 
-La API queda en `http://localhost:3000` y la base en `localhost:5432`. Los dos contenedores
-están en la red `red-db`: adentro de Docker la API llega a la base por el nombre `db`.
+La API queda en `http://localhost:3000`, la base en `localhost:5432` y el front en
+`http://localhost:4200`. La API y la base están en la red `red-db`: adentro de Docker la API
+llega a la base por el nombre `db`. El front está solo en `red-web` y no ve a la base.
 `make` sin nada muestra todos los comandos.
 
 ### 3. Variables de entorno
@@ -130,6 +131,8 @@ La API queda disponible en `http://localhost:3000`. Las tablas se crean solas al
 
 ## Deploy (Render)
 
+Deployada en **https://resivos-api.onrender.com** (el front, en https://resivos.netlify.app).
+
 La API se deploya en [Render](https://render.com) con el Blueprint `render.yaml` de la raíz:
 Render construye `backend-resivo/Dockerfile` y crea un Postgres administrado (no usa
 `docker-compose` ni `database/Dockerfile`). La API recibe la conexión en `DATABASE_URL`.
@@ -155,7 +158,8 @@ En Render:
    no existe, `http://localhost:4200`). Render la pide solo al crear el Blueprint: después se
    cambia en el servicio → **Environment** → "Save and deploy". Los pasos completos, con el
    front, están en el README de `frontend-resivo`.
-2. Después, cada `git push` a `main` deploya solo.
+2. Después, cada `git push` a la rama `master` deploya solo (solo si cambió algo en
+   `backend-resivo/`).
 3. Para probar la API deployada: `make probar-api API=https://<tu-servicio>.onrender.com`
 
 > ⚠ Plan gratis: el servicio se duerme sin uso (el primer pedido tarda ~1 minuto) y la base

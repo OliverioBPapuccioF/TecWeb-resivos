@@ -1,6 +1,7 @@
 import { Component, HostListener, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AvisosComponent } from './components/avisos/avisos.component';
+import { environment } from '../environments/environment';
 
 // Root component: menu, the page of the current route, the footer and the notices.
 // The background, the fonts and the colors are global: src/styles.css
@@ -11,6 +12,8 @@ import { AvisosComponent } from './components/avisos/avisos.component';
   styleUrl: './app.component.css',
 })
 export class AppComponent {
+  // name of the app in the menu (the same in every environment file)
+  protected readonly nombreApp = environment.nombreApp;
   protected readonly compacta = signal(false);
 
   // achica el menú cuando se baja más de 40px
