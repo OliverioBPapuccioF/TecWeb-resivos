@@ -137,7 +137,7 @@ Render construye `backend-resivo/Dockerfile` y crea un Postgres administrado (no
 Antes de deployar, desde la raíz:
 
 ```bash
-make deploy          # construye resivos-api:<versión> y la prueba "como en producción"
+make deploy          # prueba la API "como en producción" y el build del front para Netlify
 make deploy-borrar   # borra esa prueba local (contenedores, imágenes, datos y credenciales)
 ```
 
@@ -145,6 +145,8 @@ make deploy-borrar   # borra esa prueba local (contenedores, imágenes, datos y 
 `package.json`), la base **sin publicar** y en un volumen propio, credenciales aleatorias
 (`deploy/prod.env`, ignorado por git) y la API en `localhost:8080`, conectada con
 `DATABASE_URL` igual que en Render. Corre `scripts/probar-api.sh` y, si todo pasa, la apaga.
+Al final compila el front como Netlify (`npm run build`) y revisa que tenga `_redirects`, que
+llame a la URL de `environment.ts` y que no quede `localhost:3000`.
 
 En Render:
 

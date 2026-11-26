@@ -69,7 +69,14 @@ probar-web: ## Prueba el contenedor del front: rutas, caché, CORS y redes (no v
 	@bash scripts/probar-web.sh $(WEB) $(API)
 
 borrar: ## Borra contenedores, redes e imágenes del proyecto (los datos quedan)
-	$(COMPOSE) down --rmi local --remove-orphans $(s)
+	@# with s=, only that service: `down --rmi local <service>` would delete the images of
+	@# EVERY service, so its container and its image are deleted by hand
+	@if [ -n "$(s)" ]; then \
+		imagenes=$$($(COMPOSE) images -q $(s)); \
+		$(COMPOSE) rm -s -f $(s) && { [ -z "$$imagenes" ] || docker image rm $$imagenes; }; \
+	else \
+		$(COMPOSE) down --rmi local --remove-orphans; \
+	fi
 
 borrar-todo: ## Como borrar, pero también los datos de la base (pide confirmación)
 	@if [ -z "$(SI)" ]; then \
@@ -86,12 +93,12 @@ borrar-todo: ## Como borrar, pero también los datos de la base (pide confirmaci
 
 # ---------- deploy (Render) ----------
 
-deploy: ## Construye las imágenes versionadas y las prueba como en producción
-	@echo "== 1/4 Imágenes resivos-api:$(VERSION) y resivos-db:$(VERSION)"
+deploy: ## Prueba todo lo que se deploya: imágenes de Render "como en producción" y el build de Netlify
+	@echo "== 1/5 Imágenes resivos-api:$(VERSION) y resivos-db:$(VERSION)"
 	@echo "   (la de la API es la misma que construye Render, desde backend-resivo/Dockerfile)"
 	docker build -t resivos-api:$(VERSION) ./backend-resivo
 	docker build -t resivos-db:$(VERSION) ./database
-	@echo "== 2/4 Credenciales de producción (deploy/prod.env, ignorado por git)"
+	@echo "== 2/5 Credenciales de producción (deploy/prod.env, ignorado por git)"
 	@if [ -f deploy/prod.env ]; then \
 		echo "   ya existen: se reutilizan (la base del volumen se creó con ellas)"; \
 	else \
@@ -106,9 +113,9 @@ deploy: ## Construye las imágenes versionadas y las prueba como en producción
 			> deploy/prod.env; \
 		echo "   generadas (contraseña aleatoria)"; \
 	fi
-	@echo "== 3/4 Levanto producción local (API en localhost:$(PROD_PORT), base sin publicar)"
+	@echo "== 3/5 Levanto producción local (API en localhost:$(PROD_PORT), base sin publicar)"
 	$(PROD) up -d --wait
-	@echo "== 4/4 Pruebo la API"
+	@echo "== 4/5 Pruebo la API"
 	@bash scripts/probar-api.sh http://localhost:$(PROD_PORT) || \
 		{ $(PROD) logs --tail=40 api; $(PROD) down; exit 1; }
 	@# (docker compose port answers ":0" without error when it is not published, so ask docker inspect)
@@ -116,11 +123,27 @@ deploy: ## Construye las imágenes versionadas y las prueba como en producción
 		echo "  ✘ la base está publicada"; $(PROD) down; exit 1; \
 	else echo "  ✔ la base no está publicada (solo la ve la API)"; fi
 	$(PROD) down
+	@echo "== 5/5 Front para Netlify (npm run build, igual que en Netlify: usa environment.ts)"
+	cd frontend-resivo && npm run build
+	@# the build must have _redirects, the URL of environment.ts and no localhost:3000
+	@dist=frontend-resivo/dist/frontend-resivo/browser; \
+	url=$$(sed -n "s/^ *apiUrl: '\(.*\)',*$$/\1/p" frontend-resivo/src/environments/environment.ts); \
+	falla=0; \
+	if [ -f $$dist/_redirects ]; then echo "  ✔ tiene _redirects (refrescar en /recibos no da 404)"; \
+	else echo "  ✘ falta _redirects"; falla=1; fi; \
+	if grep -qF "\"$$url\"" $$dist/main-*.js; then echo "  ✔ llama a la API en $$url"; \
+	else echo "  ✘ no aparece la URL de environment.ts ($$url)"; falla=1; fi; \
+	if grep -q 'localhost:3000' $$dist/main-*.js; then echo "  ✘ el build tiene localhost:3000"; falla=1; \
+	else echo "  ✔ no tiene localhost:3000"; fi; \
+	rm -rf frontend-resivo/dist; exit $$falla
 	@echo
-	@echo "Listo para deployar la versión $(VERSION). En Render:"
-	@echo "  1. Primera vez: Dashboard -> New -> Blueprint -> este repo (lee render.yaml)."
-	@echo "  2. Después: cada git push a main deploya solo."
-	@echo "  3. Probar la API de Render: make probar-api API=https://<tu-servicio>.onrender.com"
+	@echo "Listo para deployar la versión $(VERSION) (pasos completos: frontend-resivo/README.md):"
+	@echo "  1. Render, primera vez: New -> Blueprint -> este repo (lee render.yaml)."
+	@echo "     Probar la API: make probar-api API=https://<api>.onrender.com"
+	@echo "  2. Netlify, primera vez: Add new project -> este repo (lee netlify.toml)."
+	@echo "  3. En Render: CORS_ORIGIN = la URL de Netlify (Environment -> Save and deploy)."
+	@echo "  4. Datos de ejemplo: make seed API=https://<api>.onrender.com"
+	@echo "  Después, cada git push deploya solo en los dos."
 
 deploy-borrar: ## Borra la prueba de producción local (contenedores, imágenes, datos y credenciales)
 	$(PROD) down --volumes
