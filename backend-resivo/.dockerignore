@@ -9,3 +9,16 @@ coverage
 .idea
 Dockerfile
 .dockerignore
+
+# not part of the API image: the database has its own image (database/Dockerfile) and its
+# data folder belongs to the container user (docker build could not even read it)
+database
+deploy
+# tools and docs of the repo, they run on your machine
+scripts
+postman
+Makefile
+docker-compose*.yml
+render.yaml
+*.md
+conversation-*.txt

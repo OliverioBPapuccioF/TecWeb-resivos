@@ -1,0 +1,29 @@
+# Frontend: the Angular app served by nginx (./Dockerfile + nginx.conf).
+#   make levantar   -> builds and starts it on localhost:4200
+#   make            -> list of all the commands
+#
+# The API and the database are in the backend repo, with their own compose: start them
+# there (make levantar) to see data. The Angular code runs in the BROWSER and calls the API
+# through its published port (localhost:3000, the apiUrl of environment.docker.ts), so the
+# web container does not need to see the API nor the database.
+#
+# Network red-web = only web: it does NOT see the database (check it with: make probar)
+
+# fixed project name, the same as the backend's compose (and the one of the integration
+# repo): the container is resivos-web-1, next to resivos-db-1 and resivos-api-1
+name: resivos
+
+services:
+  web:
+    build: .
+    restart: unless-stopped
+    ports:
+      # the API only accepts requests (CORS) from the origin in its CORS_ORIGIN (localhost:4200)
+      - "${WEB_PORT_HOST:-4200}:80"
+    # its healthcheck is in the Dockerfile; no depends_on: it only serves files, and if the
+    # API is not up the app shows the error with "Reintentar"
+    networks:
+      - red-web
+
+networks:
+  red-web:

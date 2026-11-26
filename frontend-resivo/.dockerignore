@@ -12,3 +12,11 @@ out-tsc
 README.md
 Dockerfile
 .dockerignore
+
+# tools, config and docs of the repo, not needed to build the app
+.env*
+scripts
+Makefile
+docker-compose*.yml
+netlify.toml
+*.md

@@ -3,6 +3,12 @@
 API REST para registrar **recibos de compra** y los **productos** de cada uno. Hecha con NestJS,
 TypeORM y PostgreSQL para el TP de Tecnologías Web (TUARI, UNICEN).
 
+Este repo tiene la API y la base de datos (`database/`). El front (Angular) está en su propio
+repo, y lo usa con la URL de la API.
+
+- **API deployada:** https://resivos-api.onrender.com
+- **Front:** https://resivos.netlify.app
+
 ## Modelo de datos
 
 Un recibo tiene muchos productos, y cada producto pertenece a un solo recibo (relación 1 a N).
@@ -43,63 +49,72 @@ erDiagram
 
 ### Sin `make`
 
-Todo lo de Docker se puede hacer con `docker compose`, desde la raíz del repo:
+Todo lo de Docker se puede hacer con `docker compose`, desde la raíz de este repo:
 
 | Con `make` | Sin `make` |
 | ---------- | ---------- |
-| `make levantar` | `docker compose up -d --build --wait` |
+| `make levantar` | `cp .env.example .env && cp database/.env.example database/.env` (la primera vez) y `docker compose up -d --build --wait` |
 | `make dev` | `docker compose stop api && docker compose up -d --build --wait db` |
 | `make estado` | `docker compose ps -a` |
 | `make logs s=api` | `docker compose logs -f api` |
 | `make apagar` | `docker compose stop` |
 | `make borrar` | `docker compose down --rmi local` |
 | `make seed` | `bash database/seed.sh` |
-| `make probar-api` | `bash scripts/probar-api.sh http://localhost:3000` (`make probar` corre también la prueba del front) |
+| `make probar` | `bash scripts/probar-api.sh http://localhost:3000` |
 
 ## Cómo levantarlo
 
-### 1. Instalar dependencias
+### 1. Instalar dependencias y crear los `.env`
 
 ```bash
 npm install
+cp .env.example .env                     # configuración de la API
+cp database/.env.example database/.env   # usuario y contraseña de Postgres
 ```
+
+Los `.env` **no se suben al repo** (están en el `.gitignore`); se suben los `.env.example`, con
+los nombres de todas las variables y valores para desarrollo local. `make levantar`, `make dev`
+y `make borrar-todo` los copian solos si no existen (nunca pisan los tuyos).
 
 ### 2. Levantar PostgreSQL con Docker
 
-Desde la **raíz del repo** (donde están `docker-compose.yml` y el `Makefile`):
+Desde la raíz de este repo (donde están `docker-compose.yml` y el `Makefile`):
 
 ```bash
-make dev        # levanta solo la base (y apaga la API y el front de Docker, si estaban corriendo)
+make dev        # levanta solo la base (y apaga la API de Docker, si estaba corriendo)
 ```
 
 La base se arma con `database/Dockerfile` (Postgres 18) y guarda sus datos en `database/data/`
 (ignorada por git). Para apagarla: `make apagar`. Para empezar con la base vacía:
 `make borrar-todo`. Para cargar datos de ejemplo (con la API levantada): `make seed`.
 
-### Todo con Docker (base + API + front)
+### Todo con Docker (base + API)
 
 ```bash
-make levantar   # construye las imágenes y levanta db + api + web (espera a que estén healthy)
+make levantar   # construye las imágenes y levanta db + api (espera a que estén healthy)
 make estado     # contenedores y su estado
 make logs s=api # logs de la API
 ```
 
-La API queda en `http://localhost:3000`, la base en `localhost:5432` y el front en
-`http://localhost:4200`. La API y la base están en la red `red-db`: adentro de Docker la API
-llega a la base por el nombre `db`. El front está solo en `red-web` y no ve a la base.
+La API queda en `http://localhost:3000` y la base en `localhost:5432`. Las dos están en la red
+`red-db`: adentro de Docker la API llega a la base por el nombre `db`.
+
+El front tiene su propio `docker-compose.yml` en su repo, con el **mismo nombre de proyecto**
+(`resivos`): si después de este se corre `make levantar` allá, se suma el contenedor `web` en
+la red `red-web`, que no ve a la base. Por eso `make borrar` acá no usa `--remove-orphans`
+(borraría el contenedor del front).
 `make` sin nada muestra todos los comandos.
 
 ### 3. Variables de entorno
 
-Cada carpeta tiene su `.env` (se suben al repo a propósito: son credenciales de prueba):
+Hay dos `.env`, cada uno con su `.env.example` (el que está en el repo):
 
 | Archivo | Lo lee | Para qué |
 | ------- | ------ | -------- |
-| `.env` (raíz) | `docker compose` y `make` | Puertos de tu máquina donde se publican la base (`DB_PORT_HOST`) y la API (`API_PORT_HOST`) |
 | `database/.env` | el contenedor de Postgres | Usuario, contraseña y nombre de la base, zona horaria |
-| `backend-resivo/.env` | `npm start`, `start:dev`, `start:debug`, `start:prod` y el contenedor `api` | Configuración del back (tabla de abajo). En Docker, el compose cambia `DB_HOST=db`, `DB_PORT=5432` y `PORT=3000` |
+| `.env` | `npm start`, `start:dev`, `start:debug`, `start:prod`, el contenedor `api`, `docker compose` y `make` | Configuración del back (tabla de abajo). En Docker, el compose cambia `DB_HOST=db`, `DB_PORT=5432` y `PORT=3000`. Además, `DB_PORT_HOST` y `API_PORT_HOST`: los puertos de tu máquina donde el compose publica la base y la API |
 
-Los scripts de npm cargan `backend-resivo/.env` con la opción `--env-file` de Nest/Node. Una variable
+Los scripts de npm cargan `.env` con la opción `--env-file` de Nest/Node. Una variable
 definida en el sistema tiene prioridad sobre el archivo, y si falta alguna se usa el valor por
 defecto del código.
 
@@ -108,7 +123,7 @@ defecto del código.
 | `PORT`        | `3000`      | Puerto de la API (en Render lo pone Render) |
 | `DATABASE_URL` | —          | URL completa de conexión (Render, `docker-compose.prod.yml`). Si está, se ignoran las `DB_*` |
 | `DB_HOST`     | `localhost` | Host de PostgreSQL (`db` cuando el back corre dentro de Docker) |
-| `DB_PORT`     | `5432`      | Puerto de PostgreSQL (igual a `DB_PORT_HOST` de la raíz) |
+| `DB_PORT`     | `5432`      | Puerto de PostgreSQL (igual a `DB_PORT_HOST`) |
 | `DB_USER`     | `postgres`  | Usuario de PostgreSQL (igual a `POSTGRES_USER`) |
 | `DB_PASSWORD` | `postgres`  | Contraseña de PostgreSQL (igual a `POSTGRES_PASSWORD`) |
 | `DB_NAME`     | `resivo`    | Nombre de la base (igual a `POSTGRES_DB`) |
@@ -133,14 +148,14 @@ La API queda disponible en `http://localhost:3000`. Las tablas se crean solas al
 
 Deployada en **https://resivos-api.onrender.com** (el front, en https://resivos.netlify.app).
 
-La API se deploya en [Render](https://render.com) con el Blueprint `render.yaml` de la raíz:
-Render construye `backend-resivo/Dockerfile` y crea un Postgres administrado (no usa
+La API se deploya en [Render](https://render.com) con el Blueprint `render.yaml` de este repo:
+Render construye `Dockerfile` y crea un Postgres administrado (no usa
 `docker-compose` ni `database/Dockerfile`). La API recibe la conexión en `DATABASE_URL`.
 
-Antes de deployar, desde la raíz:
+Antes de deployar:
 
 ```bash
-make deploy          # prueba la API "como en producción" y el build del front para Netlify
+make deploy          # construye resivos-api:<versión> y la prueba "como en producción"
 make deploy-borrar   # borra esa prueba local (contenedores, imágenes, datos y credenciales)
 ```
 
@@ -148,8 +163,6 @@ make deploy-borrar   # borra esa prueba local (contenedores, imágenes, datos y 
 `package.json`), la base **sin publicar** y en un volumen propio, credenciales aleatorias
 (`deploy/prod.env`, ignorado por git) y la API en `localhost:8080`, conectada con
 `DATABASE_URL` igual que en Render. Corre `scripts/probar-api.sh` y, si todo pasa, la apaga.
-Al final compila el front como Netlify (`npm run build`) y revisa que tenga `_redirects`, que
-llame a la URL de `environment.ts` y que no quede `localhost:3000`.
 
 En Render:
 
@@ -157,9 +170,8 @@ En Render:
    (la URL del front en Netlify, `https://<sitio>.netlify.app`, sin `/` al final; si todavía
    no existe, `http://localhost:4200`). Render la pide solo al crear el Blueprint: después se
    cambia en el servicio → **Environment** → "Save and deploy". Los pasos completos, con el
-   front, están en el README de `frontend-resivo`.
-2. Después, cada `git push` a la rama `master` deploya solo (solo si cambió algo en
-   `backend-resivo/`).
+   front, están en el README del repo del front.
+2. Después, cada `git push` a la rama del Blueprint deploya solo.
 3. Para probar la API deployada: `make probar-api API=https://<tu-servicio>.onrender.com`
 
 > ⚠ Plan gratis: el servicio se duerme sin uso (el primer pedido tarda ~1 minuto) y la base
@@ -293,6 +305,38 @@ Respuesta de `GET /producto/:id` (`resivoId` y `subtotal` los agrega la API):
 }
 ```
 
+## Colección de Postman
+
+`postman/resivos.postman_collection.json` (formato Postman v2.1) tiene **todos los casos de
+uso** de la API, con tests en cada pedido (35 pedidos, 74 verificaciones):
+
+| Carpeta | Pedidos |
+| ------- | ------- |
+| 0. Estado de la API | `GET /` y `GET /salud` |
+| 1. Recibos (CRUD y filtro) | listar, métodos de pago, crear, ver, filtrar con `?nombre=` y modificar |
+| 2. Productos (CRUD y filtro) | crear (en el recibo creado), listar, ver, filtrar con `?nombre=`, modificar, ver que el total del recibo cambió, borrar y ver que ya no existe |
+| 3. Estadísticas | las 4 |
+| 4. Errores | body vacío, fecha futura, fecha inexistente, método de pago inválido, `PATCH` sin campos, precio con 3 decimales, JSON mal escrito (400); recibo inexistente, producto en un recibo inexistente, ruta inexistente (404); id que no es un número (400) |
+| 5. Borrar el recibo (y sus productos) | agrega otro producto, borra el recibo y comprueba que el producto se borró en cascada |
+
+- La URL de la API es la variable de la colección **`{{baseUrl}}`** (`http://localhost:3000`
+  por defecto). Para usarla contra Render, cambiarla por `https://resivos-api.onrender.com`.
+- Hay que correrla **en orden** (o entera): "Crear recibo" guarda su id en `{{resivoId}}` y
+  "Crear producto" en `{{productoId}}`, que usan los pedidos siguientes.
+- Todo lo que crea lo borra al final, así que se puede correr contra Render sin ensuciar
+  los datos.
+
+Desde la terminal, sin instalar Postman, con [Newman](https://github.com/postmanlabs/newman)
+(el runner oficial de Postman):
+
+```bash
+make postman                                          # contra la API local
+make postman API=https://resivos-api.onrender.com     # contra Render
+```
+
+También se puede **importar** en Postman (Import → el archivo) o en Thunder Client, la
+extensión de VS Code (Collections → menú → Import → el archivo, formato Postman 2.1).
+
 ## Validaciones y errores
 
 Los bodies se validan con `class-validator`:
@@ -339,6 +383,22 @@ Respuestas de un `DELETE` exitoso (200):
 ```
 
 ## Estructura
+
+```
+.
+├── src/                    # el código de la API (abajo)
+├── test/                   # tests e2e
+├── database/               # imagen de PostgreSQL 18 (Dockerfile + .env.example) y seed.sh
+├── .env.example            # configuración de la API (se copia a .env)
+├── scripts/probar-api.sh   # prueba de humo de una API levantada (make probar)
+├── Dockerfile              # imagen de la API (la misma que construye Render)
+├── docker-compose.yml      # db + api, para desarrollo
+├── docker-compose.prod.yml # prueba local "como en producción" (make deploy)
+├── render.yaml             # Blueprint de Render: API + Postgres
+├── postman/                # colección de Postman (make postman)
+├── Makefile                # comandos de Docker (make = ayuda)
+└── conversation-*.txt      # conversación con Claude Code (primera entrega)
+```
 
 ```
 src/

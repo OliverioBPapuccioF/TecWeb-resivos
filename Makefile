@@ -1,151 +1,52 @@
-# Commands to handle the Docker part of the project from the root of the repo.
-# Run `make` (or `make ayuda`) to see them.
+# Integration repo: the whole project (database + API + frontend) from here.
+# Run `make` (or `make ayuda`) to see the commands.
 #
-# Most of them accept an optional service:  make reiniciar s=api
-# (without s= they act on every service of docker-compose.yml)
+# Each project has its own Makefile (they are split into their own repos):
+#   make -C backend-resivo <command>    database + API (seed, deploy to Render, ...)
+#   make -C frontend-resivo <command>   frontend (deploy check for Netlify, ...)
+# The three docker-compose files use the same project name (resivos), so the containers
+# are the same ones whether they are started from here or from each folder.
 
 COMPOSE := docker compose
-s ?=
-
-# the published ports come from the .env of the root (the same file docker compose reads)
--include .env
-DB_PORT_HOST ?= 5432
-API_PORT_HOST ?= 3000
-WEB_PORT_HOST ?= 4200
-API ?= http://localhost:$(API_PORT_HOST)
-WEB ?= http://localhost:$(WEB_PORT_HOST)
-
-# deploy: version of the images = version of backend-resivo/package.json
-# (read with sed, available everywhere; "=" instead of ":=" so it is only read by the
-# commands that use it, not on every make)
-VERSION = $(shell sed -n 's/^ *"version": *"\([^"]*\)".*/\1/p' backend-resivo/package.json)
-PROD_PORT ?= 8080
-PROD := VERSION=$(VERSION) PROD_PORT=$(PROD_PORT) docker compose -f docker-compose.prod.yml
+BACK := $(MAKE) --no-print-directory -C backend-resivo
+FRONT := $(MAKE) --no-print-directory -C frontend-resivo
 
 .DEFAULT_GOAL := ayuda
-.PHONY: ayuda levantar dev reiniciar apagar estado logs seed probar probar-api probar-web borrar borrar-todo deploy deploy-borrar
+.PHONY: ayuda levantar dev apagar estado logs seed probar borrar
 
 ayuda: ## Muestra esta ayuda
-	@echo "Uso: make <comando> [s=servicio]"
+	@echo "Uso: make <comando>   (cada proyecto tiene más: make -C backend-resivo / frontend-resivo)"
 	@echo
-	@grep -E '^[a-z-]+:.*## ' $(firstword $(MAKEFILE_LIST)) | awk -F ':.*## ' '{ printf "  make %-14s %s\n", $$1, $$2 }'
+	@grep -E '^[a-z-]+:.*## ' $(firstword $(MAKEFILE_LIST)) | awk -F ':.*## ' '{ printf "  make %-10s %s\n", $$1, $$2 }'
 
-levantar: ## Construye las imágenes y levanta todo (espera a que esté healthy)
-	$(COMPOSE) up -d --build --wait $(s)
+levantar: ## Construye y levanta los tres contenedores (espera a que estén healthy)
+	@# each project creates its .env files from its .env.example if they are missing
+	@$(BACK) -s .env database/.env
+	@$(FRONT) -s .env
+	$(COMPOSE) up -d --build --wait
 	@echo
-	@echo "Listo:  Front -> $(WEB)   API -> $(API)   Base -> localhost:$(DB_PORT_HOST)"
+	@echo "Listo:  Front -> http://localhost:4200   API -> http://localhost:3000   Base -> localhost:5432"
 
-dev: ## Levanta solo la base (y apaga la API y el front de Docker) para correr todo en tu máquina
-	@# the api and web containers use the same ports as npm run start:dev and ng serve,
-	@# so they are stopped first
-	$(COMPOSE) stop api web
-	$(COMPOSE) up -d --build --wait db
-	@echo
-	@echo "Base lista en localhost:$(DB_PORT_HOST). Ahora, cada uno en otra terminal:"
-	@echo "  cd backend-resivo && npm run start:dev"
-	@echo "  cd frontend-resivo && npm start"
+dev: ## Solo la base, para correr la API (npm run start:dev) y el front (npm start) en tu máquina
+	$(FRONT) apagar
+	$(BACK) dev
+	@echo "  cd frontend-resivo && npm start   (en otra terminal)"
 
-reiniciar: ## Reinicia los contenedores (para cambios de código: make levantar)
-	$(COMPOSE) restart $(s)
-
-apagar: ## Detiene los contenedores sin borrar nada
-	$(COMPOSE) stop $(s)
+apagar: ## Detiene los tres contenedores sin borrar nada
+	$(COMPOSE) stop
 
 estado: ## Muestra los contenedores y si están healthy
 	@$(COMPOSE) ps -a --format 'table {{.Service}}\t{{.Status}}\t{{.Ports}}'
 
-logs: ## Sigue los logs (Ctrl+C para salir)
-	$(COMPOSE) logs -f --tail=100 $(s)
+logs: ## Sigue los logs de los tres (Ctrl+C para salir)
+	$(COMPOSE) logs -f --tail=100
 
-seed: ## Carga 30 recibos y 200 productos de ejemplo (API levantada, base vacía)
-	@API=$(API) bash database/seed.sh
+seed: ## Carga los datos de ejemplo (API levantada, base vacía)
+	$(BACK) seed
 
-probar: probar-api probar-web ## Prueba la API y el front levantados con make levantar
+probar: ## Prueba la API y el front
+	$(BACK) probar
+	$(FRONT) probar
 
-probar-api: ## Prueba rápida de la API (otra URL: make probar-api API=https://...)
-	@bash scripts/probar-api.sh $(API)
-
-probar-web: ## Prueba el contenedor del front: rutas, caché, CORS y redes (no ve a la base)
-	@bash scripts/probar-web.sh $(WEB) $(API)
-
-borrar: ## Borra contenedores, redes e imágenes del proyecto (los datos quedan)
-	@# with s=, only that service: `down --rmi local <service>` would delete the images of
-	@# EVERY service, so its container and its image are deleted by hand
-	@if [ -n "$(s)" ]; then \
-		imagenes=$$($(COMPOSE) images -q $(s)); \
-		$(COMPOSE) rm -s -f $(s) && { [ -z "$$imagenes" ] || docker image rm $$imagenes; }; \
-	else \
-		$(COMPOSE) down --rmi local --remove-orphans; \
-	fi
-
-borrar-todo: ## Como borrar, pero también los datos de la base (pide confirmación)
-	@if [ -z "$(SI)" ]; then \
-		read -r -p "¿Seguro? Se borran TODOS los datos de la base (database/data) [s/N] " r; \
-		case "$$r" in s|S) ;; *) echo "Cancelado."; exit 1 ;; esac; \
-	fi
-	@# everything is stopped first: nobody can be writing in the database while it is deleted
-	$(COMPOSE) stop
-	@# the files of database/data belong to the user of the container (not to you),
-	@# so they are deleted from inside a container: no sudo needed
-	$(COMPOSE) run --rm --no-deps -T --entrypoint sh db -c 'rm -rf /var/lib/postgresql/*'
+borrar: ## Borra contenedores, redes e imágenes (los datos de la base quedan)
 	$(COMPOSE) down --rmi local --remove-orphans
-	@echo "Listo: la base va a arrancar vacía la próxima vez (make levantar / make dev)."
-
-# ---------- deploy (Render) ----------
-
-deploy: ## Prueba todo lo que se deploya: imágenes de Render "como en producción" y el build de Netlify
-	@echo "== 1/5 Imágenes resivos-api:$(VERSION) y resivos-db:$(VERSION)"
-	@echo "   (la de la API es la misma que construye Render, desde backend-resivo/Dockerfile)"
-	docker build -t resivos-api:$(VERSION) ./backend-resivo
-	docker build -t resivos-db:$(VERSION) ./database
-	@echo "== 2/5 Credenciales de producción (deploy/prod.env, ignorado por git)"
-	@if [ -f deploy/prod.env ]; then \
-		echo "   ya existen: se reutilizan (la base del volumen se creó con ellas)"; \
-	else \
-		mkdir -p deploy; clave=$$(openssl rand -hex 16); \
-		printf '%s\n' \
-			"# generated by make deploy: credentials of the local production test" \
-			"# (they are deleted together with the database by: make deploy-borrar)" \
-			"POSTGRES_USER=resivo" "POSTGRES_PASSWORD=$$clave" "POSTGRES_DB=resivo" \
-			"DATABASE_URL=postgresql://resivo:$$clave@db:5432/resivo" \
-			"CORS_ORIGIN=http://localhost:4200" \
-			"TZ=America/Argentina/Buenos_Aires" "PGTZ=America/Argentina/Buenos_Aires" \
-			> deploy/prod.env; \
-		echo "   generadas (contraseña aleatoria)"; \
-	fi
-	@echo "== 3/5 Levanto producción local (API en localhost:$(PROD_PORT), base sin publicar)"
-	$(PROD) up -d --wait
-	@echo "== 4/5 Pruebo la API"
-	@bash scripts/probar-api.sh http://localhost:$(PROD_PORT) || \
-		{ $(PROD) logs --tail=40 api; $(PROD) down; exit 1; }
-	@# (docker compose port answers ":0" without error when it is not published, so ask docker inspect)
-	@if docker inspect -f '{{json .NetworkSettings.Ports}}' $$($(PROD) ps -q db) | grep -q HostPort; then \
-		echo "  ✘ la base está publicada"; $(PROD) down; exit 1; \
-	else echo "  ✔ la base no está publicada (solo la ve la API)"; fi
-	$(PROD) down
-	@echo "== 5/5 Front para Netlify (npm run build, igual que en Netlify: usa environment.ts)"
-	cd frontend-resivo && npm run build
-	@# the build must have _redirects, the URL of environment.ts and no localhost:3000
-	@dist=frontend-resivo/dist/frontend-resivo/browser; \
-	url=$$(sed -n "s/^ *apiUrl: '\(.*\)',*$$/\1/p" frontend-resivo/src/environments/environment.ts); \
-	falla=0; \
-	if [ -f $$dist/_redirects ]; then echo "  ✔ tiene _redirects (refrescar en /recibos no da 404)"; \
-	else echo "  ✘ falta _redirects"; falla=1; fi; \
-	if grep -qF "\"$$url\"" $$dist/main-*.js; then echo "  ✔ llama a la API en $$url"; \
-	else echo "  ✘ no aparece la URL de environment.ts ($$url)"; falla=1; fi; \
-	if grep -q 'localhost:3000' $$dist/main-*.js; then echo "  ✘ el build tiene localhost:3000"; falla=1; \
-	else echo "  ✔ no tiene localhost:3000"; fi; \
-	rm -rf frontend-resivo/dist; exit $$falla
-	@echo
-	@echo "Listo para deployar la versión $(VERSION) (pasos completos: frontend-resivo/README.md):"
-	@echo "  1. Render, primera vez: New -> Blueprint -> este repo (lee render.yaml)."
-	@echo "     Probar la API: make probar-api API=https://<api>.onrender.com"
-	@echo "  2. Netlify, primera vez: Add new project -> este repo (lee netlify.toml)."
-	@echo "  3. En Render: CORS_ORIGIN = la URL de Netlify (Environment -> Save and deploy)."
-	@echo "  4. Datos de ejemplo: make seed API=https://<api>.onrender.com"
-	@echo "  Después, cada git push deploya solo en los dos."
-
-deploy-borrar: ## Borra la prueba de producción local (contenedores, imágenes, datos y credenciales)
-	$(PROD) down --volumes
-	-docker image rm resivos-api:$(VERSION) resivos-db:$(VERSION)
-	rm -f deploy/prod.env

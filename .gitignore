@@ -1,87 +1,15 @@
-# compiled output
-backend-resivo/dist
-backend-resivo/node_modules
-backend-resivo/build
-frontend-resivo/dist
-frontend-resivo/node_modules
-frontend-resivo/tmp
-frontend-resivo/out-tsc
-frontend-resivo/bazel-out
+# Integration repo: backend-resivo/ and frontend-resivo/ have their OWN .gitignore
+# (they are split into their own repos with git subtree, and this file does not go there).
+# Only what belongs to this root:
 
-# TypeScript build cache
-*.tsbuildinfo
+# environment variables (each project has its .env.example)
+.env
+.env.*
+!.env.example
 
-# Logs
-logs
-*.log
-npm-debug.log*
-pnpm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
-
-# OS
+# Claude Code session data (CLAUDE.md is committed)
+.claude
+.vscode
+.idea
 .DS_Store
 Thumbs.db
-
-# Tests
-backend-resivo/coverage
-backend-resivo/.nyc_output
-frontend-resivo/coverage
-frontend-resivo/testem.log
-frontend-resivo/libpeerconnection.log
-__screenshots__/
-
-# IDEs and editors
-.idea/
-.history/
-.project
-.classpath
-.c9/
-*.launch
-.settings/
-*.sublime-workspace
-
-# IDE - VSCode
-backend-resivo/.vscode/*
-!backend-resivo/.vscode/settings.json
-!backend-resivo/.vscode/tasks.json
-!backend-resivo/.vscode/launch.json
-!backend-resivo/.vscode/extensions.json
-
-# dotenv environment variable files
-# (the .env of each folder IS committed on purpose: it is a practice project with
-# test credentials only; the *.local ones are for personal overrides)
-.env.development.local
-.env.test.local
-.env.production.local
-.env.local
-
-# temp directory
-.temp
-.tmp
-
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
-
-# Diagnostic reports (https://nodejs.org/api/report.html)
-report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
-
-
-.vscode
-.claude
-# PostgreSQL data (docker-compose bind mount)
-/database/data/
-
-# local production test of `make deploy` (credentials)
-/deploy/
-
-# Angular (from the .gitignore that `ng new` generated in frontend-resivo/)
-# .angular/ is the build cache of the Angular CLI
-frontend-resivo/.angular/
-frontend-resivo/.sass-cache/
-frontend-resivo/connect.lock
-frontend-resivo/typings

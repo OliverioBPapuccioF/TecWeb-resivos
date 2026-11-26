@@ -1,0 +1,36 @@
+# compiled output and dependencies
+/dist
+/node_modules
+/out-tsc
+/tmp
+*.tsbuildinfo
+
+# build cache of the Angular CLI
+/.angular/
+/.sass-cache/
+/connect.lock
+/typings
+
+# Netlify CLI (if it is used to deploy by hand)
+.netlify
+
+# tests
+/coverage
+/testem.log
+/libpeerconnection.log
+
+# logs
+*.log
+npm-debug.log*
+
+# environment variables: each one copies .env.example to .env (in every folder, e.g.
+# database/.env too). Only the .env.example files are committed
+.env
+.env.*
+!.env.example
+
+# editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

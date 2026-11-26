@@ -1,0 +1,58 @@
+# Backend: database + API. The frontend (web) has its own compose in its own repo.
+#   make levantar   -> builds and starts both
+#   make            -> list of all the commands
+#
+# Network red-db = api + db: the API reaches the database by the name of its service ("db").
+# The database and the API are published on your machine (localhost:5432 and :3000), so the
+# backend can also run outside Docker (make dev) and the browser can call the API.
+# The published ports come from .env (DB_PORT_HOST, API_PORT_HOST).
+
+# fixed project name, the same as the frontend's compose (and the one of the integration
+# repo): containers are resivos-db-1, resivos-api-1 in any folder, and starting the frontend
+# later just adds resivos-web-1 to the same project
+name: resivos
+
+services:
+  # PostgreSQL, built from database/Dockerfile
+  db:
+    build: ./database
+    restart: unless-stopped
+    env_file: ./database/.env
+    ports:
+      # published so the backend can reach it from your machine (make dev + npm run start:dev)
+      - "${DB_PORT_HOST:-5432}:5432"
+    volumes:
+      # the data stays inside the project, in database/data (ignored by git)
+      - ./database/data:/var/lib/postgresql
+    healthcheck:
+      # ready when Postgres accepts connections ($$ = the variable of the container, not of compose)
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - red-db
+
+  # NestJS API, built from ./Dockerfile (its healthcheck is in that Dockerfile)
+  api:
+    build: .
+    restart: unless-stopped
+    # same configuration as when it runs on your machine...
+    env_file: ./.env
+    # ...except what changes inside Docker: the database is the "db" service, on its
+    # internal port (always 5432, whatever DB_PORT_HOST is), and the API listens on 3000
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      PORT: 3000
+    ports:
+      - "${API_PORT_HOST:-3000}:3000"
+    depends_on:
+      # do not start the API until Postgres accepts connections
+      db:
+        condition: service_healthy
+    networks:
+      - red-db
+
+networks:
+  red-db:

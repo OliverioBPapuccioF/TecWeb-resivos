@@ -1,0 +1,1391 @@
+{
+  "info": {
+    "name": "Resivos API",
+    "description": "API REST de recibos y productos (TP Tecnologías Web, TUARI - UNICEN).\n\nCorrer las carpetas EN ORDEN (o la colección entera): \"Crear recibo\" guarda su id en resivoId y \"Crear producto\" en productoId, que usan los pedidos siguientes. Todo lo que se crea se borra en la carpeta 5.\n\nbaseUrl: http://localhost:3000 (local) o https://resivos-api.onrender.com (Render).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "0. Estado de la API",
+      "item": [
+        {
+          "name": "API viva",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('status ok', () => pm.expect(pm.response.json().status).to.eql('ok'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": []
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "API y base de datos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('la base responde', () => pm.expect(pm.response.json().baseDeDatos).to.eql('ok'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/salud",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "salud"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "1. Recibos (CRUD y filtro)",
+      "item": [
+        {
+          "name": "Listar recibos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('es una lista', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/resivo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "resivo"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Métodos de pago",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('son los 4 métodos', () => pm.expect(pm.response.json()).to.eql(['Efectivo', 'Débito', 'Crédito', 'Transferencia']));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/resivo/metodos-pago",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "resivo",
+                "metodos-pago"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Crear recibo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 201', () => pm.response.to.have.status(201));",
+                  "",
+                  "const r = pm.response.json();",
+                  "pm.test('devuelve el recibo con id, sin productos y total 0', () => {",
+                  "  pm.expect(r.id).to.be.a('number');",
+                  "  pm.expect(r.productos).to.eql([]);",
+                  "  pm.expect(r.total).to.eql(0);",
+                  "});",
+                  "pm.test('recorta los espacios del nombre', () => pm.expect(r.nombre).to.eql('Kiosco Postman'));",
+                  "// the next requests use this id",
+                  "pm.collectionVariables.set('resivoId', r.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/resivo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "resivo"
+              ]
+            },
+            "description": "Crea el recibo de prueba y guarda su id en la variable resivoId. La carpeta 5 lo borra al final.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"  Kiosco Postman  \",\n  \"tiempoCompra\": \"2026-01-15\",\n  \"metodoPago\": \"Efectivo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ver recibo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test('es el recibo creado', () => {",
+                  "  const r = pm.response.json();",
+                  "  pm.expect(r.id).to.eql(Number(pm.collectionVariables.get('resivoId')));",
+                  "  pm.expect(r.metodoPago).to.eql('Efectivo');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/resivo/{{resivoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "resivo",
+                "{{resivoId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Filtrar recibos por nombre",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "",
+                  "const lista = pm.response.json();",
+                  "pm.test('todos contienen \"postman\" (sin distinguir mayúsculas)', () =>",
+                  "  lista.forEach((r) => pm.expect(r.nombre.toLowerCase()).to.include('postman')));",
+                  "pm.test('incluye el recibo creado', () =>",
+                  "  pm.expect(lista.map((r) => r.id)).to.include(Number(pm.collectionVariables.get('resivoId'))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/resivo?nombre=postman",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "resivo"
+              ],
+              "query": [
+                {
+                  "key": "nombre",
+                  "value": "postman"
+                }
+              ]
+            },
+            "description": "?nombre= filtra los recibos cuyo nombre contiene el texto, sin distinguir mayúsculas."
+          },
+          "response": []
+        },
+        {
+          "name": "Modificar recibo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test('cambió solo el método de pago', () => {",
+                  "  const r = pm.response.json();",
+                  "  pm.expect(r.metodoPago).to.eql('Débito');",
+                  "  pm.expect(r.nombre).to.eql('Kiosco Postman');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/resivo/{{resivoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "resivo",
+                "{{resivoId}}"
+              ]
+            },
+            "description": "En PATCH todos los campos son opcionales (tiene que venir al menos uno).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"metodoPago\": \"Débito\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Productos (CRUD y filtro)",
+      "item": [
+        {
+          "name": "Crear producto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 201', () => pm.response.to.have.status(201));",
+                  "",
+                  "const p = pm.response.json();",
+                  "pm.test('subtotal = cantidad x precio', () => pm.expect(p.subtotal).to.eql(2 * 4200.5));",
+                  "pm.test('pertenece al recibo', () => pm.expect(p.resivoId).to.eql(Number(pm.collectionVariables.get('resivoId'))));",
+                  "pm.collectionVariables.set('productoId', p.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/producto",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "producto"
+              ]
+            },
+            "description": "Crea un producto dentro del recibo de prueba y guarda su id en productoId.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Yerba Postman 1kg\",\n  \"cantidad\": 2,\n  \"precio\": 4200.5,\n  \"resivoId\": {{resivoId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar productos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test('es una lista e incluye el producto creado', () => {",
+                  "  const lista = pm.response.json();",
+                  "  pm.expect(lista).to.be.an('array');",
+                  "  pm.expect(lista.map((p) => p.id)).to.include(Number(pm.collectionVariables.get('productoId')));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/producto",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "producto"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ver producto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test('trae su recibo', () => {",
+                  "  const p = pm.response.json();",
+                  "  pm.expect(p.resivo.id).to.eql(Number(pm.collectionVariables.get('resivoId')));",
+                  "  pm.expect(p.resivo.nombre).to.eql('Kiosco Postman');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/producto/{{productoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "producto",
+                "{{productoId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Filtrar productos por nombre",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "",
+                  "const lista = pm.response.json();",
+                  "pm.test('encuentra el producto (sin distinguir mayúsculas)', () =>",
+                  "  pm.expect(lista.map((p) => p.id)).to.include(Number(pm.collectionVariables.get('productoId'))));",
+                  "pm.test('todos contienen el texto', () =>",
+                  "  lista.forEach((p) => pm.expect(p.nombre.toLowerCase()).to.include('yerba postman')));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/producto?nombre=YERBA%20postman",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "producto"
+              ],
+              "query": [
+                {
+                  "key": "nombre",
+                  "value": "YERBA%20postman"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Modificar producto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test('cambia la cantidad y se recalcula el subtotal', () => {",
+                  "  const p = pm.response.json();",
+                  "  pm.expect(p.cantidad).to.eql(3);",
+                  "  pm.expect(p.subtotal).to.eql(3 * 4200.5);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/producto/{{productoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "producto",
+                "{{productoId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cantidad\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Total del recibo (suma de subtotales)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test('el total del recibo es la suma de sus productos', () => {",
+                  "  const r = pm.response.json();",
+                  "  pm.expect(r.productos).to.have.lengthOf(1);",
+                  "  pm.expect(r.total).to.eql(3 * 4200.5);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/resivo/{{resivoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "resivo",
+                "{{resivoId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Borrar producto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('confirma el borrado', () => pm.expect(pm.response.json().message).to.include('eliminado correctamente'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/producto/{{productoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "producto",
+                "{{productoId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "El producto ya no existe",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 404', () => pm.response.to.have.status(404));",
+                  "pm.test('mensaje: no encontrado', () => {",
+                  "  const m = pm.response.json().message;",
+                  "  pm.expect([].concat(m).join(' | ')).to.include('no encontrado');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/producto/{{productoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "producto",
+                "{{productoId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Estadísticas",
+      "item": [
+        {
+          "name": "Últimos 5 recibos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('hasta 5 recibos', () => pm.expect(pm.response.json().length).to.be.at.most(5));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/resivo/estadisticas/ultimos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "resivo",
+                "estadisticas",
+                "ultimos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Recibos por método de pago",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('los 4 métodos con su cantidad', () => pm.expect(pm.response.json().cantidades).to.have.lengthOf(4));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/resivo/estadisticas/metodo-pago",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "resivo",
+                "estadisticas",
+                "metodo-pago"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Gasto por fecha",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('es una lista', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/resivo/estadisticas/por-fecha",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "resivo",
+                "estadisticas",
+                "por-fecha"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Gasto por local",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "pm.test('es una lista', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/resivo/estadisticas/por-local",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "resivo",
+                "estadisticas",
+                "por-local"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Errores",
+      "item": [
+        {
+          "name": "Recibo sin datos (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 400', () => pm.response.to.have.status(400));",
+                  "pm.test('mensaje: El nombre del local es obligatorio', () => {",
+                  "  const m = pm.response.json().message;",
+                  "  pm.expect([].concat(m).join(' | ')).to.include('El nombre del local es obligatorio');",
+                  "});",
+                  "pm.test('un mensaje por campo (lista)', () => pm.expect(pm.response.json().message).to.be.an('array').with.lengthOf(3));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/resivo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "resivo"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Recibo con fecha futura (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 400', () => pm.response.to.have.status(400));",
+                  "pm.test('mensaje: no puede ser posterior a hoy', () => {",
+                  "  const m = pm.response.json().message;",
+                  "  pm.expect([].concat(m).join(' | ')).to.include('no puede ser posterior a hoy');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/resivo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "resivo"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Kiosco Postman\",\n  \"tiempoCompra\": \"2999-01-01\",\n  \"metodoPago\": \"Efectivo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Recibo con fecha inexistente (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 400', () => pm.response.to.have.status(400));",
+                  "pm.test('mensaje: no es una fecha válida', () => {",
+                  "  const m = pm.response.json().message;",
+                  "  pm.expect([].concat(m).join(' | ')).to.include('no es una fecha válida');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/resivo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "resivo"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Kiosco Postman\",\n  \"tiempoCompra\": \"2026-02-30\",\n  \"metodoPago\": \"Efectivo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Método de pago inválido (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 400', () => pm.response.to.have.status(400));",
+                  "pm.test('mensaje: El método de pago tiene que ser uno de', () => {",
+                  "  const m = pm.response.json().message;",
+                  "  pm.expect([].concat(m).join(' | ')).to.include('El método de pago tiene que ser uno de');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/resivo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "resivo"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Kiosco Postman\",\n  \"tiempoCompra\": \"2026-01-15\",\n  \"metodoPago\": \"Bitcoin\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH sin campos (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 400', () => pm.response.to.have.status(400));",
+                  "pm.test('mensaje: al menos un campo', () => {",
+                  "  const m = pm.response.json().message;",
+                  "  pm.expect([].concat(m).join(' | ')).to.include('al menos un campo');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/resivo/{{resivoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "resivo",
+                "{{resivoId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Producto con precio de 3 decimales (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 400', () => pm.response.to.have.status(400));",
+                  "pm.test('mensaje: hasta 2 decimales', () => {",
+                  "  const m = pm.response.json().message;",
+                  "  pm.expect([].concat(m).join(' | ')).to.include('hasta 2 decimales');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/producto",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "producto"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Yerba Postman 1kg\",\n  \"cantidad\": 1,\n  \"precio\": 10.555,\n  \"resivoId\": {{resivoId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Producto en un recibo que no existe (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 404', () => pm.response.to.have.status(404));",
+                  "pm.test('mensaje: Recibo con id 2147483647 no encontrado', () => {",
+                  "  const m = pm.response.json().message;",
+                  "  pm.expect([].concat(m).join(' | ')).to.include('Recibo con id 2147483647 no encontrado');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/producto",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "producto"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Yerba Postman 1kg\",\n  \"cantidad\": 1,\n  \"precio\": 100,\n  \"resivoId\": 2147483647\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "JSON mal escrito (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 400', () => pm.response.to.have.status(400));",
+                  "pm.test('mensaje: El body no es un JSON válido', () => {",
+                  "  const m = pm.response.json().message;",
+                  "  pm.expect([].concat(m).join(' | ')).to.include('El body no es un JSON válido');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/resivo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "resivo"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"nombre\": \"Kiosco Postman\", }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Id que no es un número (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 400', () => pm.response.to.have.status(400));",
+                  "pm.test('mensaje: El id tiene que ser un número entero mayor a 0', () => {",
+                  "  const m = pm.response.json().message;",
+                  "  pm.expect([].concat(m).join(' | ')).to.include('El id tiene que ser un número entero mayor a 0');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/resivo/abc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "resivo",
+                "abc"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Recibo que no existe (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 404', () => pm.response.to.have.status(404));",
+                  "pm.test('mensaje: Recibo con id 2147483647 no encontrado', () => {",
+                  "  const m = pm.response.json().message;",
+                  "  pm.expect([].concat(m).join(' | ')).to.include('Recibo con id 2147483647 no encontrado');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/resivo/2147483647",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "resivo",
+                "2147483647"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ruta que no existe (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 404', () => pm.response.to.have.status(404));",
+                  "pm.test('mensaje: no existe', () => {",
+                  "  const m = pm.response.json().message;",
+                  "  pm.expect([].concat(m).join(' | ')).to.include('no existe');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/no-existe",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "no-existe"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Borrar el recibo (y sus productos)",
+      "item": [
+        {
+          "name": "Agregar otro producto al recibo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('productoId', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/producto",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "producto"
+              ]
+            },
+            "description": "Para ver el borrado en cascada: al borrar el recibo se borra también este producto.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Pan Postman\",\n  \"cantidad\": 1,\n  \"precio\": 2800,\n  \"resivoId\": {{resivoId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Borrar recibo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 200', () => pm.response.to.have.status(200));",
+                  "",
+                  "pm.test('confirma el borrado junto con su producto', () => {",
+                  "  const m = pm.response.json().message;",
+                  "  pm.expect(m).to.include('eliminado correctamente');",
+                  "  pm.expect(m).to.include('1 producto');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/resivo/{{resivoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "resivo",
+                "{{resivoId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "El recibo ya no existe",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 404', () => pm.response.to.have.status(404));",
+                  "pm.test('mensaje: no encontrado', () => {",
+                  "  const m = pm.response.json().message;",
+                  "  pm.expect([].concat(m).join(' | ')).to.include('no encontrado');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/resivo/{{resivoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "resivo",
+                "{{resivoId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Su producto se borró en cascada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('responde 404', () => pm.response.to.have.status(404));",
+                  "pm.test('mensaje: no encontrado', () => {",
+                  "  const m = pm.response.json().message;",
+                  "  pm.expect([].concat(m).join(' | ')).to.include('no encontrado');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/producto/{{productoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "producto",
+                "{{productoId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "resivoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "productoId",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

@@ -1,8 +1,8 @@
-# Render Blueprint: deploys the API + a Render Postgres database from this repo.
-# Render reads this file from the root of the repo (Dashboard -> New -> Blueprint).
+# Render Blueprint: deploys the API + a Render Postgres database from this repo (the
+# backend repo). Render reads this file from the root of the repo (New -> Blueprint).
 # Reference: https://render.com/docs/blueprint-spec
 #
-# - Render does NOT use docker-compose: it builds backend-resivo/Dockerfile (the same image
+# - Render does NOT use docker-compose: it builds ./Dockerfile (the same image
 #   that `make deploy` builds and tests locally) and runs one container.
 # - The database is NOT our database/Dockerfile: it is a Postgres managed by Render.
 # - A new deploy starts on every push to the branch of the Blueprint (autoDeployTrigger).
@@ -18,8 +18,8 @@ services:
     plan: free
     # closest region to Argentina (it can not be changed after creation)
     region: virginia
-    # monorepo: the service lives in backend-resivo/ (dockerfilePath is relative to rootDir)
-    rootDir: backend-resivo
+    # the API is at the root of this repo (database/ and the tools are left out of the image
+    # by .dockerignore)
     dockerfilePath: ./Dockerfile
     # GET / answers { status: 'ok' }: Render waits for it before sending traffic
     healthCheckPath: /

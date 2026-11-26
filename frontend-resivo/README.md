@@ -1,7 +1,7 @@
 # Frontend Resivo
 
 Aplicación web en **Angular 22** para ver y cargar los **recibos de compra** y sus **productos**.
-Consume la API REST de `backend-resivo`. TP de Tecnologías Web (TUARI, UNICEN).
+Consume la API REST del repo del back (`backend-resivo`). TP de Tecnologías Web (TUARI, UNICEN).
 
 Pantallas: **Inicio** (`/`, últimos recibos y gráficos), **Recibos** (`/recibos`, CRUD de recibos
 y sus productos) y **Productos** (`/productos`, todos los productos). El detalle está más abajo.
@@ -10,7 +10,7 @@ Deployada en **https://resivos.netlify.app** (la API, en https://resivos-api.onr
 ## Requisitos
 
 - Node.js 22.22, 24.15 o 26 (o superior)
-- La API levantada en `http://localhost:3000` (desde la raíz del repo: `make levantar`)
+- La API levantada en `http://localhost:3000` (en el repo del back: `make levantar`)
 
 ## Cómo correrlo
 
@@ -170,6 +170,25 @@ Arriba tiene el estado de la **API** y de la **base de datos** (`GET /salud`, ca
 
 Además, **cada vez que se abre `/example`** (también al recargar la página) se borran los recibos llamados "Ejemplo /example" que quedaron de recorridos sin terminar (y sus productos, por la cascada). Las pruebas se muestran recién después de esa limpieza.
 
+### `/example` y la colección de Postman
+
+`/example` hace **desde el front** lo mismo que la colección de Postman del repo del back
+(`postman/resivos.postman_collection.json`): llama a cada endpoint con los servicios de
+Angular (`ResivoService`, `ProductoService`, `EstadisticasService`) y muestra el pedido y la
+respuesta tal cual, como lo haría Postman. Así se prueba que el front habla bien con la API
+(URL, bodies, códigos y errores), no solo la API sola.
+
+| Prueba de `/example` | Pedidos | Carpeta de la colección |
+| -------------------- | ------- | ----------------------- |
+| Recorrido · columna **Recibo** | `POST /resivo` → `GET /resivo/:id` → `PATCH /resivo/:id` (método de pago) → `DELETE /resivo/:id` | 1. Recibos y 5. Borrar el recibo |
+| Recorrido · columna **Producto** | `POST /producto` (en el recibo creado) → `GET /producto/:id` → `PATCH /producto/:id` → `DELETE /producto/:id`; si se borra antes el recibo, se ve la cascada | 2. Productos y 5. Borrar el recibo |
+| Errores | body vacío (400, lista de mensajes), fecha futura (400), recibo inexistente (404), id inválido `abc` (400), `PATCH` sin campos (400), producto en un recibo inexistente (404) | 4. Errores |
+| Estadísticas | las 4 (`/resivo/estadisticas/...`) | 3. Estadísticas |
+| Estado (arriba) | `GET /salud` | 0. Estado de la API |
+
+Los listados y el filtro (`GET /resivo`, `GET /producto`, `?nombre=`) no están en `/example`:
+los usan las pantallas de la app (Recibos, Productos y el buscador).
+
 Para mostrar el código HTTP real, `pages/example/registro-http.interceptor.ts` (registrado en
 `app.config.ts`) anota el status de cada respuesta. Si al final se borra `/example`, borrarlo
 también de ahí.
@@ -181,29 +200,36 @@ estáticos (la imagen final pesa ~100 MB y no tiene Node). `nginx.conf` responde
 en cualquier ruta (si no, refrescar el navegador en `/recibos` daría 404), no cachea
 `index.html`, cachea los `.js`/`.css` (tienen un hash en el nombre) y comprime con gzip.
 
-Se levanta junto con la API y la base desde la **raíz del repo**:
+Este repo tiene su propio `docker-compose.yml`, solo con el servicio `web`:
 
 ```bash
-make levantar     # los tres contenedores: front en localhost:4200
-make probar-web   # prueba el front (make probar = API + front)
+make levantar     # el front en localhost:4200 (la API: make levantar en el repo del back)
+make probar       # prueba el contenedor (scripts/probar-web.sh)
+make apagar       # lo detiene y libera el 4200 para ng serve
 ```
 
-- Usa el mismo puerto que `ng serve` (4200, `WEB_PORT_HOST` en el `.env` de la raíz): no se
-  pueden tener los dos a la vez. Para desarrollar, `make dev` apaga el front y la API de
-  Docker.
+`make` sin nada muestra todos los comandos. Sin `make`: `docker compose up -d --build`.
+
+- Usa el mismo puerto que `ng serve` (4200, `WEB_PORT_HOST` en `.env`, que `make levantar`
+  copia de `.env.example` si no existe; sin `make`: `cp .env.example .env`): no se pueden tener
+  los dos a la vez.
+- El compose usa el **mismo nombre de proyecto** que el del back (`resivos`): los contenedores
+  quedan juntos (`resivos-db-1`, `resivos-api-1`, `resivos-web-1`), pero cada repo maneja los
+  suyos. Por eso `make borrar` no usa `--remove-orphans` (borraría la base y la API).
 - El contenedor `web` está **solo en la red `red-web`**: no ve a la base ni a la API por la
   red de Docker. No le hace falta: el código de Angular corre **en el navegador**, que le pide
-  los datos a la API por `localhost:3000` (el `apiUrl` de `environment.ts`, que queda dentro
-  del build). Por eso tampoco hace falta un proxy.
+  los datos a la API por `localhost:3000` (el `apiUrl` de `environment.docker.ts`, que queda
+  dentro del build). Por eso tampoco hace falta un proxy.
 - `/example` también está en el build de producción.
 
-`scripts/probar-web.sh` (en la raíz) chequea:
+`scripts/probar-web.sh` chequea:
 - que el contenedor esté healthy
 - que `/`, `/recibos`, `/productos` y `/example/recorrido` respondan la app, y que un archivo
   que no existe dé 404
 - los encabezados de caché y la compresión
 - que el build apunte a la API y que la API acepte el origen del front (CORS)
-- las redes: `web` está solo en `red-web` y no resuelve `db` ni `api`
+- las redes: `web` está solo en `red-web` y no resuelve `db` ni `api` (y, si la API del back
+  corre en Docker, que desde ella sí se llega a `db`)
 
 Solo la imagen, sin el compose:
 
@@ -214,17 +240,19 @@ docker run --rm -p 4200:80 frontend-resivo
 
 ## Deploy (Render + Netlify)
 
-La API y la base van a **Render** (`render.yaml` de la raíz) y el front a **Netlify**
-(`netlify.toml` de la raíz). Netlify compila solo `frontend-resivo/` (`base`), con Node 24,
-corriendo `npm run build`, y publica `dist/frontend-resivo/browser`. `public/_redirects`
+La API y la base van a **Render** (`render.yaml` del repo del back) y el front a **Netlify**
+(`netlify.toml` de este repo). Netlify compila con Node 24 corriendo `npm run build`, y publica
+`dist/frontend-resivo/browser`. Antes de deployar, `make deploy` hace lo mismo en tu máquina y
+revisa el resultado (que tenga `_redirects`, que llame a la URL de `environment.ts` y que no
+quede `localhost:3000`). `public/_redirects`
 (`/*  /index.html  200`) hace en Netlify lo mismo que `try_files` en nginx: refrescar en
 `/recibos` no da 404 (los archivos que existen, como `main-*.js`, se sirven igual).
 
 Cada paso necesita la URL del anterior, así que van en este orden:
 
-1. **Render:** Dashboard → New → Blueprint → este repo. Pide `CORS_ORIGIN`: poné por ahora
+1. **Render:** Dashboard → New → Blueprint → el repo del back. Pide `CORS_ORIGIN`: poné por ahora
    `http://localhost:4200`. Copiá la URL de la API (`https://resivos-api.onrender.com` si el
-   nombre estaba libre) y probala: `make probar-api API=https://<api>.onrender.com`.
+   nombre estaba libre) y probala (en el repo del back): `make probar-api API=https://<api>.onrender.com`.
 2. Si la URL es otra, cambiala en `src/environments/environment.ts` → commit y push.
 3. **Netlify:** Add new project → Import an existing project → este repo (lee `netlify.toml`,
    no hace falta configurar nada). Copiá la URL del front (`https://<sitio>.netlify.app`).
@@ -233,7 +261,7 @@ Cada paso necesita la URL del anterior, así que van en este orden:
    **Public**.
 4. **Render** → el servicio `resivos-api` → Environment → `CORS_ORIGIN` = la URL de Netlify,
    exacta y sin `/` al final → "Save and deploy".
-5. Datos de ejemplo: `make seed API=https://<api>.onrender.com`.
+5. Datos de ejemplo (en el repo del back): `make seed API=https://<api>.onrender.com`.
 
 > ⚠ Plan gratis de Render: la API se duerme a los 15 minutos sin uso (el primer pedido tarda
 > ~1 minuto: el front lo avisa) y la base **vence a los 30 días** de creada.
@@ -247,3 +275,17 @@ Cada paso necesita la URL del anterior, así que van en este orden:
 | Detección de cambios | **Zoneless** (sin `zone.js`): el estado que se muestra va en `signal()` |
 | Estilos | CSS puro, sin frameworks |
 | Tests | No se generan (`skipTests` en `angular.json`) |
+
+## Estructura del repo
+
+```
+.
+├── src/                    # la app (pages/, components/, services/, environments/, ...)
+├── public/                 # favicon y _redirects (se copian tal cual al build)
+├── scripts/                # verificar-urls.mjs (npm) y probar-web.sh (make probar)
+├── Dockerfile, nginx.conf  # imagen de producción: build con Node + nginx
+├── docker-compose.yml      # el servicio web (red red-web)
+├── netlify.toml            # deploy en Netlify
+├── Makefile                # comandos de Docker y el chequeo del build de Netlify
+└── front-end-claude.md     # conversación con Claude Code (segunda entrega)
+```

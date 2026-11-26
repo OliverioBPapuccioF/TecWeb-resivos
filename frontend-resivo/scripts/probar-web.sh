@@ -7,7 +7,8 @@
 #   bash scripts/probar-web.sh                                   (localhost:4200 / :3000)
 #   bash scripts/probar-web.sh http://localhost:4200 http://localhost:3000
 #
-# Run from the root of the repo, with `make levantar` done. Needs curl and docker.
+# Run from the root of this repo (make probar), with the web container up (make levantar)
+# and the API of the backend repo up. Needs curl and docker.
 # Exit code 0 = everything OK.
 set -uo pipefail
 
@@ -87,11 +88,16 @@ origen=$(cabeceras -H "Origin: $WEB" "$API/resivo" | tr -d '\r' | sed -n 's/^acc
   mal "la API acepta pedidos desde $WEB (CORS)" "(CORS_ORIGIN = '${origen:-ninguno}')"
 
 echo "== Redes"
+# the networks of web: only one, red-web (its full name is <project>_red-web)
+proyecto=$(docker inspect -f '{{index .Config.Labels "com.docker.compose.project"}}' "$web")
 redes=$(docker inspect -f '{{range $k, $v := .NetworkSettings.Networks}}{{$k}} {{end}}' "$web" | xargs)
-[ "$redes" = resivos_red-web ] && ok "web está solo en red-web" || mal "web está solo en red-web" "($redes)"
-# control: from red-db the name "db" exists (so the next check means something)...
-si "desde la API se llega a db (red-db)" docker compose exec -T api getent hosts db
-# ...and from the web container it does not
+[ "$redes" = "${proyecto}_red-web" ] && ok "web está solo en red-web" || mal "web está solo en red-web" "($redes)"
+# control, if the API of the backend runs in Docker in the same project: from red-db the
+# name "db" exists, so the next check means something
+api=$(docker ps -q --filter "label=com.docker.compose.project=$proyecto" --filter "label=com.docker.compose.service=api")
+if [ -n "$api" ]; then
+  si "desde la API se llega a db (red-db)" docker exec "$api" getent hosts db
+fi
 if docker exec "$web" getent hosts db >/dev/null 2>&1; then
   mal "web NO ve a la base (db)"
 else

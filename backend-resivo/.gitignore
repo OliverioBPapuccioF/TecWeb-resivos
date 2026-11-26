@@ -1,0 +1,32 @@
+# compiled output and dependencies
+/dist
+/node_modules
+/build
+*.tsbuildinfo
+
+# tests
+/coverage
+/.nyc_output
+
+# logs
+logs
+*.log
+npm-debug.log*
+
+# PostgreSQL data of docker-compose (bind mount, belongs to the container user)
+/database/data/
+
+# local production test of `make deploy` (credentials)
+/deploy/
+
+# environment variables: each one copies .env.example to .env (in every folder, e.g.
+# database/.env too). Only the .env.example files are committed
+.env
+.env.*
+!.env.example
+
+# editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
