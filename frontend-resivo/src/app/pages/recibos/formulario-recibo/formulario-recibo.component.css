@@ -1,0 +1,5 @@
+/* after trying to save, every invalid field gets the red border, also the ones that were
+   not touched (styles.css paints them only when touched: input.ng-invalid.ng-touched) */
+form.ng-submitted .ng-invalid {
+  border-color: var(--rojo);
+}

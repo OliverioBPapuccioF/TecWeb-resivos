@@ -1,0 +1,8 @@
+<div class="vacio" role="alert">
+  @for (m of mensajes; track m) {
+    <p class="campo-error">{{ m }}</p>
+  }
+  <button type="button" class="btn-primario reintentar" (click)="reintentar.emit()">
+    Reintentar
+  </button>
+</div>

@@ -1,0 +1,26 @@
+<app-modal titulo="Borrar producto" [ocupado]="borrando()" (cerrar)="cerrar.emit()">
+  <p>
+    ¿Borrar <strong>{{ producto.nombre }}</strong> ({{ producto.cantidad }} ×
+    {{ producto.precio | precio }} = {{ producto.subtotal | precio }})
+    @if (reciboDelProducto(); as recibo) {
+      del recibo {{ recibo.nombre }} · {{ recibo.tiempoCompra | fecha }}?
+    } @else {
+      ?
+    }
+  </p>
+  @if (reciboDelProducto(); as recibo) {
+    <p class="texto-secundario">
+      El total del recibo pasa de {{ recibo.total | precio }} a
+      <strong>{{ totalNuevo(recibo) | precio }}</strong>.
+    </p>
+  }
+  <p class="texto-secundario">No se puede deshacer.</p>
+
+  @for (error of errores(); track error) {
+    <p class="campo-error">{{ error }}</p>
+  }
+
+  <button acciones type="button" class="btn-peligro" [disabled]="borrando()" (click)="confirmar()">
+    {{ borrando() ? 'Borrando…' : 'Borrar' }}
+  </button>
+</app-modal>

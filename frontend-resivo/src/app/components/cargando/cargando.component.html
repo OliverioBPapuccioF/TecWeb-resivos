@@ -1,1 +1,8 @@
-<p class="cargando" role="status">{{ texto }}…</p>
+<div role="status">
+  <p class="cargando">{{ texto }}…</p>
+  @if (demorado()) {
+    <p class="texto-secundario demora">
+      La API está tardando en responder. Si estaba dormida, puede tardar hasta un minuto.
+    </p>
+  }
+</div>

@@ -1,0 +1,62 @@
+.seccion {
+  margin-bottom: 40px;
+}
+
+/* 1. the last 5 resivos ALWAYS in one row. If they do not fit, the row becomes a rail that
+   scrolls sideways (the page itself does not get a horizontal scroll) */
+.top5 {
+  display: grid;
+  grid-auto-flow: column;
+  /* at least 190px each; when there is room, they share the width */
+  grid-auto-columns: minmax(190px, 1fr);
+  gap: 24px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  /* room so the hard shadows and the tilt of the cards are not cut by the rail */
+  padding: 6px 12px 16px 4px;
+  margin: -6px -12px -16px -4px;
+  scrollbar-color: var(--gris-300) transparent;
+}
+
+/* each card stops aligned to the start of the rail when scrolling */
+.top5 .tarjeta {
+  scroll-snap-align: start;
+}
+
+.top5 .fecha {
+  margin: 0 0 8px;
+}
+
+.top5 .precio {
+  margin: 0;
+}
+
+/* 2. the two pies side by side (one below the other on narrow screens) */
+.tortas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+  gap: 32px;
+  margin-bottom: 40px;
+}
+
+/* the chart cards do not tilt like the others: a tilted chart is harder to read */
+.grafico,
+.grafico:nth-child(3n + 2),
+.grafico:nth-child(3n) {
+  transform: none;
+}
+
+.grafico:hover {
+  transform: translate(-3px, -3px);
+}
+
+/* Chart.js needs a box with a height to draw in (maintainAspectRatio: false) */
+.lienzo {
+  position: relative;
+  height: 300px;
+}
+
+.lienzo--barras {
+  height: 340px;
+}

@@ -1,0 +1,5 @@
+/* the line about the delay, centered under "Cargando…" (.cargando has its own padding) */
+.demora {
+  margin: -32px 0 32px;
+  text-align: center;
+}

@@ -35,3 +35,29 @@ th.numero {
   gap: 16px;
   margin: 0;
 }
+
+/* the resivo of each producto: it opens its modal, but looks like a link and not like a
+   button (the global button style would be too heavy for each row) */
+.enlace {
+  padding: 0;
+  border: none;
+  background: none;
+  box-shadow: none;
+  color: var(--azul);
+  font-family: var(--fuente-texto);
+  font-size: inherit;
+  font-weight: 500;
+  text-align: left;
+  text-transform: none;
+  letter-spacing: normal;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.enlace:hover,
+.enlace:active {
+  transform: none;
+  box-shadow: none;
+  color: var(--violeta);
+}

@@ -3,7 +3,9 @@
 Aplicación web en **Angular 22** para ver y cargar los **recibos de compra** y sus **productos**.
 Consume la API REST de `backend-resivo`. TP de Tecnologías Web (TUARI, UNICEN).
 
-> En construcción: las pantallas se agregan en los pasos siguientes del TP.
+Pantallas: **Inicio** (`/`, últimos recibos y gráficos), **Recibos** (`/recibos`, CRUD de recibos
+y sus productos) y **Productos** (`/productos`, todos los productos). El detalle está más abajo.
+Las URLs de producción (front en Netlify y API en Render) se agregan cuando se haga el deploy.
 
 ## Requisitos
 
@@ -27,9 +29,9 @@ npm run build
 
 | Ruta | Pantalla | Estado |
 | ---- | -------- | ------ |
-| `/` | Inicio con estadísticas | En construcción (Paso 17) |
-| `/recibos` | Recibos en tarjetas, buscador y CRUD | En construcción (Pasos 13 y 14) |
-| `/productos` | Listado de productos, filtro y CRUD | En construcción (Pasos 15 y 16) |
+| `/` | Inicio: los últimos 5 recibos siempre en una fila (si no entran, un riel que se desliza de costado), método de pago (dona), gasto por local (torta: los 5 locales que más gastaron + "Otros") y gasto por mes de los últimos 12 meses (barras) | Lista |
+| `/recibos` | Recibos en tarjetas: buscador (local, método de pago o fecha, sin distinguir mayúsculas ni acentos), orden, modal con sus productos, y crear / editar / borrar recibos | Lista |
+| `/productos` | Tabla con todos los productos y su recibo (clic en el recibo = modal con sus productos); buscador (producto, local o fecha), orden, precio mayor/menor que un monto. Solo aparecen los de precio mayor a 0: los descuentos (precio negativo) y los regalos (precio 0) no cuentan como productos (siguen en su recibo y en su total) | Lista (editar y borrar en cada fila; los productos nuevos se crean desde su recibo) |
 | `/example` | Página de prueba de la API (no está en el menú) | Lista |
 
 Cualquier otra dirección redirige al inicio (`**` en `app.routes.ts`). El menú y el pie están
@@ -38,13 +40,85 @@ en `app.component.html`; cada pantalla se muestra entre los dos, en el `<router-
 Las reglas de diseño (colores, fuentes, formas y clases disponibles) están al principio de
 `src/styles.css`.
 
+## Formulario de recibo
+
+`pages/recibos/formulario-recibo`: el mismo formulario para crear (`[recibo]="null"`, POST) y editar
+(`[recibo]="unRecibo"`, PATCH, con los datos cargados), adentro de `<app-modal>`. Es un formulario
+**template-driven**: `<form #form="ngForm">`, cada campo con `[(ngModel)]` y una referencia
+(`#nombre="ngModel"`) para leer su estado.
+
+| Campo | Validaciones |
+| ----- | ------------ |
+| Nombre del local | `required` y `pattern` (no solo espacios) |
+| Fecha de compra | `<input type="date">`, `required`, `max` = hoy y `appFechaNoFutura` (`src/app/validadores/`), porque el `max` de Angular solo valida números |
+| Método de pago | `<select>` con las opciones de `GET /resivo/metodos-pago`, `required` |
+
+Los mensajes aparecen debajo de cada campo al salir de él (`touched`) o al intentar guardar
+(`form.submitted`); con errores no se manda nada. Si la API responde un error (ej. 400), sus
+mensajes se ven adentro del modal. Al guardar o borrar se vuelve a pedir la lista (sin perder la
+búsqueda ni el orden) y aparece un aviso. Borrar pide confirmación y avisa cuántos productos se
+borran con el recibo.
+
+## Productos: crear, editar y borrar
+
+- **Crear**: solo desde el modal de productos de un recibo (en `/recibos`), con **Agregar
+  producto** al lado del total. No hay `<select>`: el formulario dice a qué recibo se agrega.
+- **Editar / Borrar**: en cada fila, en ese modal y en `/productos`. Al editar, el `<select>` viene
+  con el recibo del producto ya elegido y se puede cambiar (lo mueve a otro recibo).
+
+`components/formulario-producto` (template-driven, como el de recibo):
+
+| Campo | Validaciones |
+| ----- | ------------ |
+| Nombre | `required` y `pattern` (no solo espacios) |
+| Cantidad | `required`, `min="1"` y `pattern` (número entero) |
+| Precio | `required` y `pattern` (hasta 2 decimales). Acepta 0 (regalo) y negativos (descuento), como el back |
+| Recibo | Solo al editar: `<select>` con `[ngValue]` (el id queda como número), "Local · fecha", más recientes primero, `required`. Al crear se muestra el recibo como texto |
+
+`components/borrar-producto`: la confirmación dice la cuenta del producto y cómo queda el total
+del recibo ("pasa de $4.501,50 a $0"); si no recibe el recibo, se lo pide a la API.
+
+Al guardar o borrar desde un recibo se actualizan el modal (tabla y total) y la tarjeta; en
+`/productos` se vuelve a pedir la lista. Si al editar el precio queda en 0 o menos, el aviso dice
+que ya no aparece en Productos (sigue en su recibo).
+
+## Gráficos (Inicio)
+
+Con [Chart.js](https://www.chartjs.org/) 4.6 a través de [ng2-charts](https://valor-software.com/ng2-charts/) 11
+(`<canvas baseChart [type] [data] [options]>`). En `app.config.ts`, `provideCharts` registra solo
+lo que se usa (dona, torta y barras) para que el resto de Chart.js no entre en el bundle.
+`src/app/utils/graficos.ts` toma los colores y la fuente de las variables de `styles.css` (sin
+el rojo, que en el diseño es solo para borrar y errores). Las estadísticas las calcula la API;
+el front solo arma el top 5 + "Otros" de la torta y suma los totales por mes para las barras.
+
+El límite de tamaño del bundle inicial (`budgets` en `angular.json`) se subió a 700 kB por
+Chart.js.
+
+## Estados de cada pantalla
+
+Inicio, Recibos y Productos muestran siempre uno de estos estados:
+
+| Estado | Qué se ve |
+| ------ | --------- |
+| Cargando | `<app-cargando>`; a los 5 s, el aviso de que la API está tardando |
+| Error | `<app-error-carga>` con el mensaje (del back, "No se pudo conectar con la API" o "La API no respondió a tiempo") y **Reintentar** |
+| Vacío | Un `.vacio` que dice que todavía no hay datos (y cómo cargarlos) |
+| Sin resultados | Un `.vacio` cuando la búsqueda/filtro no encuentra nada |
+| Éxito | Los datos; después de guardar o borrar, un aviso de éxito |
+
+Todos los pedidos tienen un límite de **90 segundos** (`services/tiempo-limite.interceptor.ts`):
+si la API no contesta, fallan con "La API no respondió a tiempo" en lugar de quedar cargando.
+Los errores de carga se muestran solo en la página; los avisos rojos quedan para errores que
+no se ven en ella (por ejemplo, al guardar en un modal o al abrir un recibo).
+
 ## Componentes compartidos (`src/app/components/`)
 
 | Componente | Uso |
 | ---------- | --- |
 | `<app-modal>` | Popup con el contenido que se le pasa (`ng-content`). Arriba, al lado del título, siempre tiene **Cerrar**; abajo, **Cancelar** (`textoCerrar` cambia el texto y `[textoCerrar]="null"` lo saca) más los botones con el atributo `acciones`. Se cierra con esos botones, clic afuera o Esc, salvo mientras `[ocupado]` es `true`. `[ancho]="true"` lo hace más ancho (para una tabla). Bloquea el scroll de fondo y pone el foco en el primer campo (al cerrar vuelve al botón que lo abrió). **Se pueden apilar**: un modal abierto desde otro queda adelante, y Esc o el clic afuera cierran solo el de adelante. |
-| `<app-tabla-productos [productos] [total]>` | Tabla con los productos de un recibo (cantidad, precio, subtotal), el total al final y **Editar** / **Borrar** en cada fila: emite `(editar)` y `(borrar)` con el producto. Si no hay productos muestra un `.vacio`. Lo que se le pase con el atributo `pie` (ej. el botón **Agregar producto**) va en la misma línea que el total, a la derecha. |
-| `<app-cargando texto="Cargando recibos" />` | Indicador mientras se espera la API. |
+| `<app-tabla-productos [productos] [total] [conRecibo] [textoVacio]>` | Tabla con los productos de un recibo (cantidad, precio, subtotal), el total al final y **Editar** / **Borrar** en cada fila: emite `(editar)` y `(borrar)` con el producto. Con `[conRecibo]="true"` agrega la columna Recibo (local · fecha), que emite `(verRecibo)` con el id. Si no hay productos muestra un `.vacio` con `textoVacio`. Lo que se le pase con el atributo `pie` (ej. el botón **Agregar producto**) va en la misma línea que el total, a la derecha. |
+| `<app-cargando texto="Cargando recibos" />` | Indicador mientras se espera la API. Si pasan 5 s, agrega "La API está tardando en responder…" (en Render la API se duerme y el primer pedido puede tardar un minuto). |
+| `<app-error-carga [mensajes] (reintentar)>` | Lo que muestra una pantalla cuando no pudo cargar sus datos: los mensajes y el botón Reintentar. |
 | `AvisosService` + `<app-avisos>` | `avisos.exito('…')` se va solo a los 4 s; `avisos.error(mensajesDeError(e))` queda hasta cerrarlo. `<app-avisos>` está una sola vez, en `app.component.html`. |
 
 Pipes (`src/app/pipes/`): `precio` → `$7.400`, `$1.500,50`, `-$1.200`; `fecha` → `'2026-10-18'` a `18/10/2026`.

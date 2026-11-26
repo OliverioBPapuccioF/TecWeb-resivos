@@ -1,0 +1,25 @@
+/* cantidad and precio side by side (one below the other on narrow screens) */
+.fila {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 480px) {
+  .fila {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* new producto: the resivo it goes to, as text (instead of the <select>) */
+.recibo-fijo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 20px;
+}
+
+/* after trying to save, every invalid field gets the red border (like the resivo form) */
+form.ng-submitted .ng-invalid {
+  border-color: var(--rojo);
+}

@@ -1,11 +1,78 @@
 <header class="encabezado-pagina">
   <div>
     <h1>Inicio</h1>
-    <p>
-      Resumen de tus compras: últimos locales, gasto por fecha y por local, y el método de pago más
-      usado.
-    </p>
+    <p>Un resumen de tus compras: lo último que cargaste, cómo pagás, dónde y cuánto gastás.</p>
   </div>
 </header>
 
-<div class="vacio">Esta pantalla se arma en el Paso 17 (inicio con estadísticas).</div>
+@if (cargando()) {
+  <app-cargando texto="Cargando el resumen" />
+} @else if (error(); as mensajes) {
+  <app-error-carga [mensajes]="mensajes" (reintentar)="cargar()" />
+} @else {
+  <!-- 1. the last 5 resivos, side by side -->
+  <section class="seccion">
+    <h2>Últimos recibos</h2>
+    @if (ultimos().length === 0) {
+      <div class="vacio">Todavía no hay recibos cargados.</div>
+    } @else {
+      <div class="top5">
+        @for (recibo of ultimos(); track recibo.id) {
+          <article class="tarjeta">
+            <h3 class="tarjeta__titulo">{{ recibo.nombre }}</h3>
+            <p class="texto-secundario fecha">{{ recibo.tiempoCompra | fecha }}</p>
+            <p class="precio">{{ recibo.total | precio }}</p>
+          </article>
+        }
+      </div>
+    }
+  </section>
+
+  <!-- 2. the two "pies": payment methods (doughnut) and money spent per local (pie) -->
+  <div class="tortas">
+    <section class="tarjeta grafico">
+      <h3 class="tarjeta__titulo">Método de pago</h3>
+      @if (masUsado(); as mas) {
+        <p class="texto-secundario">
+          El más usado es <strong>{{ mas.metodo }}</strong>: {{ mas.cantidad }} de
+          {{ mas.total }} recibos.
+        </p>
+        <div class="lienzo">
+          <canvas
+            baseChart
+            type="doughnut"
+            [data]="datosMetodo()"
+            [options]="opcionesMetodo"
+          ></canvas>
+        </div>
+      } @else {
+        <div class="vacio">Sin recibos para mostrar.</div>
+      }
+    </section>
+
+    <section class="tarjeta grafico">
+      <h3 class="tarjeta__titulo">Gasto por local</h3>
+      <p class="texto-secundario">Los 5 locales donde más gastaste; el resto, en "Otros".</p>
+      @if (datosLocal().labels?.length) {
+        <div class="lienzo">
+          <canvas baseChart type="pie" [data]="datosLocal()" [options]="opcionesLocal"></canvas>
+        </div>
+      } @else {
+        <div class="vacio">Sin gastos para mostrar.</div>
+      }
+    </section>
+  </div>
+
+  <!-- 3. money spent per month, all the width -->
+  <section class="tarjeta grafico grafico--ancho">
+    <h3 class="tarjeta__titulo">Gasto por mes</h3>
+    <p class="texto-secundario">Los últimos 12 meses (los meses sin compras, en $0).</p>
+    @if (hayGastoPorMes()) {
+      <div class="lienzo lienzo--barras">
+        <canvas baseChart type="bar" [data]="datosMes()" [options]="opcionesMes"></canvas>
+      </div>
+    } @else {
+      <div class="vacio">No hay compras en los últimos 12 meses.</div>
+    }
+  </section>
+}

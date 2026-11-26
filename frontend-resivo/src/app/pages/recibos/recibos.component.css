@@ -1,0 +1,46 @@
+/* ===== filter: one row, compact; it wraps on narrow screens (it is not fixed on top) ===== */
+.filtro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.filtro__buscar {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+
+.filtro__orden {
+  flex: 0 1 13rem;
+}
+
+/* ===== inside each card ===== */
+.tarjeta__datos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 0 0 8px;
+}
+
+.tarjeta__cantidad {
+  margin: 0 0 4px;
+}
+
+.tarjeta .precio {
+  margin: 0;
+}
+
+/* buttons of each card: "Ver productos" on top, all the width; Editar and Borrar below,
+   half and half (overrides the flex row of .tarjeta__acciones in styles.css) */
+.tarjeta__acciones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.tarjeta__acciones button:first-child {
+  grid-column: 1 / -1;
+}

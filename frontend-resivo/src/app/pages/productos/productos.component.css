@@ -1,0 +1,43 @@
+/* ===== filter: two rows (search + Limpiar on top, the rest below); each row wraps on
+   narrow screens, and it is not fixed on top ===== */
+.filtro {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.filtro__fila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.filtro__buscar {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+
+.filtro__orden {
+  flex: 0 1 12rem;
+}
+
+/* "Precio mayor que" + amount, together */
+.filtro__precio {
+  display: flex;
+  flex: 0 1 18rem;
+  gap: 6px;
+}
+
+.filtro__precio select {
+  flex: 1 1 auto;
+}
+
+.filtro__precio input {
+  width: 7rem;
+}
+
+.contador {
+  margin: 0 0 12px;
+}

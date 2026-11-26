@@ -1,0 +1,114 @@
+<app-modal [titulo]="titulo" [ocupado]="guardando()" (cerrar)="cerrar.emit()">
+  <form id="form-producto" #form="ngForm" (ngSubmit)="guardar(form)" novalidate>
+    <div class="campo">
+      <label for="producto-nombre">Nombre</label>
+      <input
+        id="producto-nombre"
+        name="nombre"
+        type="text"
+        placeholder="Yerba mate 1kg"
+        required
+        pattern=".*\S.*"
+        [(ngModel)]="modelo.nombre"
+        #nombre="ngModel"
+      />
+      @if (nombre.invalid && (nombre.touched || form.submitted)) {
+        <p class="campo-error">El nombre del producto es obligatorio.</p>
+      }
+    </div>
+
+    <div class="fila">
+      <div class="campo">
+        <label for="producto-cantidad">Cantidad</label>
+        <!-- min="1" (greater than 0) and pattern (whole number) are validators of Angular -->
+        <input
+          id="producto-cantidad"
+          name="cantidad"
+          type="number"
+          min="1"
+          step="1"
+          required
+          pattern="\d+"
+          [(ngModel)]="modelo.cantidad"
+          #cantidad="ngModel"
+        />
+        @if (cantidad.invalid && (cantidad.touched || form.submitted)) {
+          <p class="campo-error">
+            @if (cantidad.errors?.['required']) {
+              La cantidad es obligatoria.
+            } @else {
+              La cantidad tiene que ser un número entero mayor a 0.
+            }
+          </p>
+        }
+      </div>
+
+      <div class="campo">
+        <label for="producto-precio">Precio</label>
+        <!-- any amount with up to 2 decimals: 0 (gift) and negative (discount) are accepted -->
+        <input
+          id="producto-precio"
+          name="precio"
+          type="number"
+          step="0.01"
+          placeholder="4200"
+          required
+          pattern="-?\d+(\.\d{1,2})?"
+          [(ngModel)]="modelo.precio"
+          #precio="ngModel"
+        />
+        @if (precio.invalid && (precio.touched || form.submitted)) {
+          <p class="campo-error">
+            @if (precio.errors?.['required']) {
+              El precio es obligatorio.
+            } @else {
+              El precio puede tener hasta 2 decimales.
+            }
+          </p>
+        }
+      </div>
+    </div>
+
+    @if (reciboFijo) {
+      <!-- new producto: it goes to the resivo where it was opened, so there is nothing to choose -->
+      <p class="recibo-fijo">
+        <span class="texto-secundario">Se agrega al recibo</span>
+        <strong>{{ etiqueta(reciboFijo) }}</strong>
+      </p>
+    } @else {
+      <div class="campo">
+        <label for="producto-recibo">Recibo</label>
+        <select
+          id="producto-recibo"
+          name="resivoId"
+          required
+          [disabled]="cargandoRecibos() || errorRecibos()"
+          [(ngModel)]="modelo.resivoId"
+          #recibo="ngModel"
+        >
+          <option [ngValue]="null" disabled>
+            {{ cargandoRecibos() ? 'Cargando recibos…' : 'Elegí un recibo' }}
+          </option>
+          @for (r of recibos(); track r.id) {
+            <!-- [ngValue] keeps the id as a number (value would turn it into text) -->
+            <option [ngValue]="r.id">{{ etiqueta(r) }}</option>
+          }
+        </select>
+        @if (errorRecibos()) {
+          <p class="campo-error">No se pudieron cargar los recibos.</p>
+        } @else if (modelo.resivoId === null && (recibo.touched || form.submitted)) {
+          <p class="campo-error">Elegí el recibo del producto.</p>
+        }
+      </div>
+    }
+
+    <!-- errors that the API answered when saving -->
+    @for (error of erroresApi(); track error) {
+      <p class="campo-error">{{ error }}</p>
+    }
+  </form>
+
+  <button acciones type="submit" form="form-producto" class="btn-primario" [disabled]="guardando()">
+    {{ guardando() ? 'Guardando…' : 'Guardar' }}
+  </button>
+</app-modal>

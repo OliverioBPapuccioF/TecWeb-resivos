@@ -1,13 +1,150 @@
 <header class="encabezado-pagina">
   <div>
     <h1>Recibos</h1>
-    <p>
-      Tus recibos de compra en tarjetas, con sus productos y el total. Se van a poder buscar, crear,
-      editar y borrar.
-    </p>
+    <p>Tus recibos de compra, con lo que gastaste en cada uno.</p>
   </div>
+  <button type="button" class="btn-primario" (click)="nuevoRecibo()">Nuevo recibo</button>
 </header>
 
-<div class="vacio">
-  Esta pantalla se arma en los Pasos 13 y 14 (tarjetas, buscador y CRUD de recibos).
+<!-- filter: search while typing, order and clear (works on the list already loaded) -->
+<div class="filtro">
+  <input
+    type="search"
+    class="filtro__buscar"
+    placeholder="Buscar por local, método de pago o fecha"
+    aria-label="Buscar recibos"
+    [(ngModel)]="busqueda"
+  />
+  <select class="filtro__orden" aria-label="Ordenar recibos" [(ngModel)]="orden">
+    @for (o of ordenes; track o.valor) {
+      <option [value]="o.valor">{{ o.texto }}</option>
+    }
+  </select>
+  <button type="button" [disabled]="!hayFiltro()" (click)="limpiar()">Limpiar</button>
 </div>
+
+@if (cargando()) {
+  <app-cargando texto="Cargando recibos" />
+} @else if (error(); as mensajes) {
+  <app-error-carga [mensajes]="mensajes" (reintentar)="cargar()" />
+} @else if (recibos().length === 0) {
+  <div class="vacio">Todavía no hay recibos cargados. Creá el primero con "Nuevo recibo".</div>
+} @else if (visibles().length === 0) {
+  <div class="vacio">Ningún recibo coincide con "{{ busqueda() }}".</div>
+} @else {
+  <div class="grilla-tarjetas">
+    @for (recibo of visibles(); track recibo.id) {
+      <article class="tarjeta">
+        <h3 class="tarjeta__titulo">{{ recibo.nombre }}</h3>
+        <p class="tarjeta__datos">
+          <span class="texto-secundario">{{ recibo.tiempoCompra | fecha }}</span>
+          <span class="etiqueta">{{ recibo.metodoPago }}</span>
+        </p>
+        <p class="texto-secundario tarjeta__cantidad">
+          @switch (recibo.productos.length) {
+            @case (0) {
+              Sin productos
+            }
+            @case (1) {
+              1 producto
+            }
+            @default {
+              {{ recibo.productos.length }} productos
+            }
+          }
+        </p>
+        <p class="precio">{{ recibo.total | precio }}</p>
+        <div class="tarjeta__acciones">
+          <button type="button" class="btn-primario" (click)="reciboAbierto.set(recibo)">
+            Ver productos
+          </button>
+          <button type="button" (click)="editarRecibo(recibo)">Editar</button>
+          <button type="button" class="btn-peligro" (click)="pedirBorrado(recibo)">Borrar</button>
+        </div>
+      </article>
+    }
+  </div>
+}
+
+<!-- productos of a resivo: add one (next to the total), edit or delete each row.
+     The form and the confirmation open ON TOP of this modal -->
+@if (reciboAbierto(); as recibo) {
+  <app-modal
+    [titulo]="recibo.nombre"
+    [ancho]="true"
+    [textoCerrar]="null"
+    (cerrar)="reciboAbierto.set(null)"
+  >
+    <p class="texto-secundario">
+      {{ recibo.tiempoCompra | fecha }} · <span class="etiqueta">{{ recibo.metodoPago }}</span>
+    </p>
+    <app-tabla-productos
+      [productos]="recibo.productos"
+      [total]="recibo.total"
+      (editar)="editarProducto($event)"
+      (borrar)="productoBorrando.set($event)"
+    >
+      <button pie type="button" class="btn-primario" (click)="agregarProducto()">
+        Agregar producto
+      </button>
+    </app-tabla-productos>
+  </app-modal>
+
+  @if (formularioProductoAbierto()) {
+    <app-formulario-producto
+      [producto]="productoEditando()"
+      [reciboInicial]="recibo.id"
+      [reciboFijo]="productoEditando() === null ? recibo : null"
+      (guardado)="alGuardarProducto($event, recibo)"
+      (cerrar)="formularioProductoAbierto.set(false)"
+    />
+  }
+
+  @if (productoBorrando(); as producto) {
+    <app-borrar-producto
+      [producto]="producto"
+      [recibo]="recibo"
+      (borrado)="alBorrarProducto($event, recibo)"
+      (cerrar)="productoBorrando.set(null)"
+    />
+  }
+}
+
+<!-- form to create (reciboEditando = null) or edit a resivo -->
+@if (formularioAbierto()) {
+  <app-formulario-recibo
+    [recibo]="reciboEditando()"
+    (guardado)="alGuardar($event)"
+    (cerrar)="formularioAbierto.set(false)"
+  />
+}
+
+<!-- confirmation to delete a resivo (its productos are deleted too) -->
+@if (reciboBorrando(); as recibo) {
+  <app-modal titulo="Borrar recibo" [ocupado]="borrando()" (cerrar)="reciboBorrando.set(null)">
+    <p>
+      ¿Borrar el recibo de <strong>{{ recibo.nombre }}</strong> del
+      {{ recibo.tiempoCompra | fecha }} ({{ recibo.total | precio }})?
+    </p>
+    @if (recibo.productos.length === 1) {
+      <p class="campo-error">También se va a borrar su producto.</p>
+    } @else if (recibo.productos.length > 1) {
+      <p class="campo-error">
+        También se van a borrar sus {{ recibo.productos.length }} productos.
+      </p>
+    }
+    <p class="texto-secundario">No se puede deshacer.</p>
+    @for (error of erroresBorrar(); track error) {
+      <p class="campo-error">{{ error }}</p>
+    }
+    <button
+      acciones
+      type="button"
+      class="btn-peligro"
+      [disabled]="borrando()"
+      (click)="confirmarBorrado(recibo)"
+    >
+      {{ borrando() ? 'Borrando…' : 'Borrar' }}
+    </button>
+  </app-modal>
+}

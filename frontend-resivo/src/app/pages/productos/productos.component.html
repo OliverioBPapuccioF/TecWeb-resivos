@@ -1,10 +1,98 @@
 <header class="encabezado-pagina">
   <div>
     <h1>Productos</h1>
-    <p>Todos los productos con su cantidad, precio, subtotal y el recibo al que pertenecen.</p>
+    <p>
+      Todo lo que compraste, con el recibo al que pertenece cada producto. Los productos nuevos se
+      agregan desde su recibo.
+    </p>
   </div>
 </header>
 
-<div class="vacio">
-  Esta pantalla se arma en los Pasos 15 y 16 (listado, filtro y CRUD de productos).
+<!-- filter (works on the list already loaded), in two rows:
+     on top the search and "Limpiar", below the order and the price -->
+<div class="filtro">
+  <div class="filtro__fila">
+    <input
+      type="search"
+      class="filtro__buscar"
+      placeholder="Buscar por producto, local o fecha"
+      aria-label="Buscar productos"
+      [(ngModel)]="busqueda"
+    />
+    <button type="button" [disabled]="!hayFiltro()" (click)="limpiar()">Limpiar</button>
+  </div>
+
+  <div class="filtro__fila">
+    <select class="filtro__orden" aria-label="Ordenar productos" [(ngModel)]="orden">
+      @for (o of ordenes; track o.valor) {
+        <option [value]="o.valor">{{ o.texto }}</option>
+      }
+    </select>
+    <div class="filtro__precio">
+      <select aria-label="Comparar el precio" [(ngModel)]="comparador">
+        <option value="mayor">Precio mayor que</option>
+        <option value="menor">Precio menor que</option>
+      </select>
+      <input type="number" step="0.01" placeholder="$" aria-label="Monto" [(ngModel)]="monto" />
+    </div>
+  </div>
 </div>
+
+@if (cargando()) {
+  <app-cargando texto="Cargando productos" />
+} @else if (error(); as mensajes) {
+  <app-error-carga [mensajes]="mensajes" (reintentar)="cargar()" />
+} @else if (productosReales().length === 0) {
+  <div class="vacio">Todavía no hay productos. Se agregan desde un recibo.</div>
+} @else if (visibles().length === 0) {
+  <div class="vacio">Ningún producto coincide con el filtro.</div>
+} @else {
+  <p class="texto-secundario contador">
+    {{ visibles().length }} {{ visibles().length === 1 ? 'producto' : 'productos' }}
+  </p>
+  <app-tabla-productos
+    [productos]="visibles()"
+    [conRecibo]="true"
+    (verRecibo)="verRecibo($event)"
+    (editar)="productoEditando.set($event)"
+    (borrar)="productoBorrando.set($event)"
+  />
+}
+
+<!-- the productos of the resivo clicked in the table (only to look) -->
+@if (reciboAbierto(); as recibo) {
+  <app-modal
+    [titulo]="recibo.nombre"
+    [ancho]="true"
+    [textoCerrar]="null"
+    (cerrar)="reciboAbierto.set(null)"
+  >
+    <p class="texto-secundario">
+      {{ recibo.tiempoCompra | fecha }} · <span class="etiqueta">{{ recibo.metodoPago }}</span>
+    </p>
+    <app-tabla-productos
+      [productos]="recibo.productos"
+      [total]="recibo.total"
+      [conAcciones]="false"
+    />
+  </app-modal>
+}
+
+<!-- edit a producto: its resivo comes already chosen in the <select> and it can be changed -->
+@if (productoEditando(); as producto) {
+  <app-formulario-producto
+    [producto]="producto"
+    [reciboInicial]="producto.resivoId ?? null"
+    (guardado)="alGuardar($event)"
+    (cerrar)="productoEditando.set(null)"
+  />
+}
+
+<!-- delete a producto (the confirmation asks the API for its resivo to show the new total) -->
+@if (productoBorrando(); as producto) {
+  <app-borrar-producto
+    [producto]="producto"
+    (borrado)="alBorrar($event)"
+    (cerrar)="productoBorrando.set(null)"
+  />
+}

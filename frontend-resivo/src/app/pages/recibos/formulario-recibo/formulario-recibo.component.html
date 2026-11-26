@@ -1,0 +1,78 @@
+<app-modal [titulo]="titulo" [ocupado]="guardando()" (cerrar)="cerrar.emit()">
+  <!-- novalidate: the browser does not show its own bubbles; the messages are ours -->
+  <form id="form-recibo" #form="ngForm" (ngSubmit)="guardar(form)" novalidate>
+    <div class="campo">
+      <label for="recibo-nombre">Nombre del local</label>
+      <input
+        id="recibo-nombre"
+        name="nombre"
+        type="text"
+        placeholder="Supermercado Día"
+        required
+        pattern=".*\S.*"
+        [(ngModel)]="modelo.nombre"
+        #nombre="ngModel"
+      />
+      <!-- the message appears when leaving the field (touched) or when trying to save -->
+      @if (nombre.invalid && (nombre.touched || form.submitted)) {
+        <p class="campo-error">El nombre del local es obligatorio.</p>
+      }
+    </div>
+
+    <div class="campo">
+      <label for="recibo-fecha">Fecha de compra</label>
+      <input
+        id="recibo-fecha"
+        name="tiempoCompra"
+        type="date"
+        required
+        [max]="hoy"
+        appFechaNoFutura
+        [(ngModel)]="modelo.tiempoCompra"
+        #fecha="ngModel"
+      />
+      @if (fecha.invalid && (fecha.touched || form.submitted)) {
+        <p class="campo-error">
+          @if (fecha.errors?.['fechaFutura']) {
+            La fecha de compra no puede ser posterior a hoy.
+          } @else {
+            La fecha de compra es obligatoria.
+          }
+        </p>
+      }
+    </div>
+
+    <div class="campo">
+      <label for="recibo-metodo">Método de pago</label>
+      <select
+        id="recibo-metodo"
+        name="metodoPago"
+        required
+        [disabled]="errorMetodos()"
+        [(ngModel)]="modelo.metodoPago"
+        #metodo="ngModel"
+      >
+        <option value="" disabled>Elegí un método</option>
+        @for (m of metodosPago(); track m) {
+          <option [value]="m">{{ m }}</option>
+        }
+      </select>
+      @if (errorMetodos()) {
+        <p class="campo-error">No se pudieron cargar los métodos de pago.</p>
+      } @else if (metodo.invalid && (metodo.touched || form.submitted)) {
+        <p class="campo-error">Elegí un método de pago.</p>
+      }
+    </div>
+
+    <!-- errors that the API answered when saving -->
+    @for (error of erroresApi(); track error) {
+      <p class="campo-error">{{ error }}</p>
+    }
+  </form>
+
+  <!-- the button is outside the <form> (it goes at the bottom of the modal), so form="form-recibo"
+       links it: pressing it (or Enter in a field) sends the form -->
+  <button acciones type="submit" form="form-recibo" class="btn-primario" [disabled]="guardando()">
+    {{ guardando() ? 'Guardando…' : 'Guardar' }}
+  </button>
+</app-modal>
