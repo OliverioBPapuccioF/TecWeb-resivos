@@ -1,0 +1,30 @@
+<div class="modal-fondo" (click)="clickEnFondo($event)">
+  <div
+    #caja
+    class="modal"
+    [class.modal--ancho]="ancho"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-labelledby]="idTitulo"
+  >
+    <div class="modal__cabecera">
+      <h2 [id]="idTitulo">{{ titulo }}</h2>
+      <button type="button" class="modal__cerrar" [disabled]="ocupado" (click)="pedirCierre()">
+        Cerrar
+      </button>
+    </div>
+
+    <!-- the content that the page puts inside <app-modal> -->
+    <ng-content />
+
+    <div class="modal__acciones">
+      @if (textoCerrar) {
+        <button type="button" [disabled]="ocupado" (click)="pedirCierre()">
+          {{ textoCerrar }}
+        </button>
+      }
+      <!-- the buttons marked with the attribute "acciones" (e.g. Guardar) -->
+      <ng-content select="[acciones]" />
+    </div>
+  </div>
+</div>

@@ -1,0 +1,23 @@
+/* only the layout inside each notice: the look comes from .aviso in styles.css */
+.aviso__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.aviso__titulo {
+  margin-bottom: 0;
+}
+
+/* smaller than a normal button, so it does not take over the notice */
+.aviso__cerrar {
+  padding: 4px 10px;
+  font-size: 0.7rem;
+  box-shadow: 2px 2px 0 var(--btn-sombra);
+}
+
+.aviso p,
+.aviso ul {
+  margin: 6px 0 0;
+}

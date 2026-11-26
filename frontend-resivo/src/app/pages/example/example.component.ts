@@ -8,7 +8,8 @@ import { NOMBRE_RECIBO_PRUEBA } from './peticiones';
 
 // /example: test page of the services (not in the menu).
 // Header: title, state of the API and of the database, and the tabs to choose the test.
-// Body: the chosen test, loaded by the router (/example/recorrido, /error, /estadistica).
+// Body: the chosen test, loaded by the router (/example/recorrido, /error, /estadistica,
+// /componentes).
 @Component({
   selector: 'app-example',
   imports: [RouterOutlet, RouterLink, RouterLinkActive],
@@ -26,6 +27,7 @@ export class ExampleComponent implements OnDestroy {
     { ruta: 'recorrido', nombre: 'Recorrido' },
     { ruta: 'error', nombre: 'Errores' },
     { ruta: 'estadistica', nombre: 'Estadísticas' },
+    { ruta: 'componentes', nombre: 'Componentes' },
   ];
 
   // the two indicators of the header (filled in the constructor, where salud already exists)

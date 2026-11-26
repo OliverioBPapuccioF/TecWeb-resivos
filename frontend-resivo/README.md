@@ -23,6 +23,37 @@ Compilar para producción (queda en `dist/frontend-resivo/browser`):
 npm run build
 ```
 
+## Pantallas
+
+| Ruta | Pantalla | Estado |
+| ---- | -------- | ------ |
+| `/` | Inicio con estadísticas | En construcción (Paso 17) |
+| `/recibos` | Recibos en tarjetas, buscador y CRUD | En construcción (Pasos 13 y 14) |
+| `/productos` | Listado de productos, filtro y CRUD | En construcción (Pasos 15 y 16) |
+| `/example` | Página de prueba de la API (no está en el menú) | Lista |
+
+Cualquier otra dirección redirige al inicio (`**` en `app.routes.ts`). El menú y el pie están
+en `app.component.html`; cada pantalla se muestra entre los dos, en el `<router-outlet>`.
+
+Las reglas de diseño (colores, fuentes, formas y clases disponibles) están al principio de
+`src/styles.css`.
+
+## Componentes compartidos (`src/app/components/`)
+
+| Componente | Uso |
+| ---------- | --- |
+| `<app-modal>` | Popup con el contenido que se le pasa (`ng-content`). Arriba, al lado del título, siempre tiene **Cerrar**; abajo, **Cancelar** (`textoCerrar` cambia el texto y `[textoCerrar]="null"` lo saca) más los botones con el atributo `acciones`. Se cierra con esos botones, clic afuera o Esc, salvo mientras `[ocupado]` es `true`. `[ancho]="true"` lo hace más ancho (para una tabla). Bloquea el scroll de fondo y pone el foco en el primer campo (al cerrar vuelve al botón que lo abrió). **Se pueden apilar**: un modal abierto desde otro queda adelante, y Esc o el clic afuera cierran solo el de adelante. |
+| `<app-tabla-productos [productos] [total]>` | Tabla con los productos de un recibo (cantidad, precio, subtotal), el total al final y **Editar** / **Borrar** en cada fila: emite `(editar)` y `(borrar)` con el producto. Si no hay productos muestra un `.vacio`. Lo que se le pase con el atributo `pie` (ej. el botón **Agregar producto**) va en la misma línea que el total, a la derecha. |
+| `<app-cargando texto="Cargando recibos" />` | Indicador mientras se espera la API. |
+| `AvisosService` + `<app-avisos>` | `avisos.exito('…')` se va solo a los 4 s; `avisos.error(mensajesDeError(e))` queda hasta cerrarlo. `<app-avisos>` está una sola vez, en `app.component.html`. |
+
+Pipes (`src/app/pipes/`): `precio` → `$7.400`, `$1.500,50`, `-$1.200`; `fecha` → `'2026-10-18'` a `18/10/2026`.
+
+Se pueden probar en `/example/componentes`, incluido el modal de productos de un recibo:
+**Agregar producto** y **Editar** abren el formulario en un segundo modal encima (al editar, con
+los datos del producto cargados) y **Borrar** abre una confirmación. Ahí guardar y borrar son
+simulados, para no tocar los datos de ejemplo.
+
 ## Configuración (environments)
 
 La dirección de la API se escribe en **un solo lugar**: `src/environments/`.
@@ -57,6 +88,7 @@ Arriba tiene el estado de la **API** y de la **base de datos** (`GET /salud`, ca
 | `/example/recorrido` | Dos columnas, **Recibo** y **Producto**, cada una en orden: crear → ver → modificar → eliminar. Crear producto se habilita apenas existe el recibo; si se elimina el recibo primero, los pasos que le faltan al producto quedan cancelados (se borró en cascada). **Rehacer el proceso** (y salir de la vista) borra lo que quedó creado. |
 | `/example/error` | Pedidos que fallan a propósito (400 y 404), con el mensaje en castellano. |
 | `/example/estadistica` | Las 4 estadísticas, que se piden solas al entrar. |
+| `/example/componentes` | Catálogo para probar el modal, el cargando y los avisos (incluidos errores reales de la API). |
 
 Además, **cada vez que se abre `/example`** (también al recargar la página) se borran los recibos llamados "Ejemplo /example" que quedaron de recorridos sin terminar (y sus productos, por la cascada). Las pruebas se muestran recién después de esa limpieza.
 

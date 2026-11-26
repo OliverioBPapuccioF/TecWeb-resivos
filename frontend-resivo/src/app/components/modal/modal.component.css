@@ -1,0 +1,24 @@
+/* wider variant, for content like a table (the rest of the look: .modal in styles.css) */
+.modal--ancho {
+  max-width: 880px;
+}
+
+/* without a close button at the bottom and without actions, the bottom row takes no space */
+.modal__acciones:empty {
+  display: none;
+}
+
+/* title on the left, "Cerrar" on the right */
+.modal__cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* smaller than the action buttons, so it does not compete with them */
+.modal__cerrar {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  font-size: 0.72rem;
+}

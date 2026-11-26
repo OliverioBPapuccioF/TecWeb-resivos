@@ -1,3 +1,43 @@
+/* =========================================================
+   CONTEXTO DE DISEÑO de frontend-resivo
+   Reglas para TODAS las vistas. CSS puro, solo modo claro.
+   ---------------------------------------------------------
+   COLORES: usar siempre las variables de :root, nunca colores sueltos.
+     - Gris frío: fondos, texto y estructura.
+     - Azul: la acción principal.
+     - Turquesa: precios, totales y éxito.
+     - Violeta: detalles.
+     - Rojo profundo: SOLO para borrar y para errores.
+     - Sombras: gris rojizo (--sombra).
+
+   FUENTES (patrón fijo):
+     - --fuente-titulo: h1, h2, h3, títulos de tarjeta y precios.
+     - --fuente-texto: texto corrido.
+     - --fuente-interfaz: botones, etiquetas, label, encabezados de tabla,
+       menú, avisos y código.
+
+   CAOS CONTROLADO: las tarjetas alternan acento (azul → turquesa → violeta)
+   y una inclinación leve; los botones de una tarjeta toman su acento.
+   Los títulos llevan una sombra de texto en un color cercano que desentona.
+
+   FORMA: bordes de 2px gris oscuro, radios de 6, 8 y 12px, y sombras DURAS
+   (desplazadas, sin desenfoque).
+
+   DENSIDAD AIREADA: poca información por bloque y mucho espacio.
+   SIN ÍCONOS: todo es texto.
+   FORMATOS: precios como $7.400 y fechas como 18/10/2026.
+   RESPONSIVE: las grillas de tarjetas ponen tantas columnas como entren.
+
+   CLASES DISPONIBLES:
+     Layout ........ .contenedor, .encabezado-pagina
+     Botones ....... .btn-primario, .btn-peligro (sin clase = secundario)
+     Tarjetas ...... .grilla-tarjetas, .tarjeta, .tarjeta__titulo, .tarjeta__acciones
+     Datos ......... .precio, .etiqueta, .texto-secundario, .tabla-contenedor, td.numero
+     Formularios ... .campo, .campo-error
+     Modal ......... .modal-fondo, .modal, .modal__acciones
+     Avisos/estados  .avisos, .aviso, .aviso--error, .aviso__titulo, .cargando, .vacio
+   ========================================================= */
+
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap');
 
 /* =========================================================

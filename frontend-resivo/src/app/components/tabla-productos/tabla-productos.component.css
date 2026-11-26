@@ -1,0 +1,37 @@
+/* only layout: the look comes from table, .tabla-contenedor, td.numero and .precio (styles.css) */
+th.numero {
+  text-align: right;
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* smaller buttons inside the rows, so the table stays light */
+.acciones button {
+  padding: 6px 12px;
+  font-size: 0.72rem;
+}
+
+.linea-total {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+/* if the page puts nothing and there is no total, the line takes no space */
+.linea-total:empty {
+  display: none;
+}
+
+.total {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin: 0;
+}

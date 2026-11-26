@@ -1,0 +1,224 @@
+<p class="ayuda texto-secundario">
+  Los componentes compartidos que usan todas las pantallas. Probalos con los botones.
+</p>
+
+<div class="grilla-tarjetas">
+  <section class="tarjeta">
+    <h3 class="tarjeta__titulo">Modal</h3>
+    <p class="texto-secundario">
+      Se cierra con Cancelar, con un clic afuera o con Esc, salvo mientras guarda. Bloquea el scroll
+      de atrás y pone el foco en el primer campo.
+    </p>
+    <div class="tarjeta__acciones">
+      <button type="button" class="btn-primario" (click)="abrirModal()">Abrir modal</button>
+    </div>
+  </section>
+
+  <section class="tarjeta">
+    <h3 class="tarjeta__titulo">Modal de productos</h3>
+    <p class="texto-secundario">
+      Todos los productos de un recibo, con su total. Es el mismo modal, en su versión ancha. Editar
+      y Borrar son simulados acá.
+    </p>
+    <div class="tarjeta__acciones">
+      <button type="button" class="btn-primario" (click)="verProductos(true)">
+        Recibo con productos
+      </button>
+      <button type="button" (click)="verProductos(false)">Recibo sin productos</button>
+    </div>
+  </section>
+
+  <section class="tarjeta">
+    <h3 class="tarjeta__titulo">Cargando</h3>
+    <p class="texto-secundario">Se muestra mientras se espera la respuesta de la API.</p>
+    @if (cargando()) {
+      <app-cargando [texto]="textoCargando()" />
+    } @else if (resultadoCarga()) {
+      <p>{{ resultadoCarga() }}</p>
+    }
+    <div class="tarjeta__acciones">
+      <button
+        type="button"
+        class="btn-primario"
+        [disabled]="cargando()"
+        (click)="mostrarCargando()"
+      >
+        Mostrar 3 segundos
+      </button>
+      <button type="button" [disabled]="cargando()" (click)="cargarRecibos()">
+        Cargar recibos de verdad
+      </button>
+    </div>
+  </section>
+
+  <section class="tarjeta">
+    <h3 class="tarjeta__titulo">Avisos</h3>
+    <p class="texto-secundario">
+      Arriba a la derecha (abajo en el celular). El de éxito se va solo a los 4 segundos; el de
+      error queda hasta cerrarlo.
+    </p>
+    <div class="tarjeta__acciones">
+      <button
+        type="button"
+        class="btn-primario"
+        (click)="avisos.exito('Recibo creado correctamente.')"
+      >
+        Éxito
+      </button>
+      <button type="button" (click)="avisos.error('No se pudo conectar con la API.')">Error</button>
+      <button type="button" (click)="errorReal404()">Error real (404)</button>
+      <button type="button" (click)="errorReal400()">Error real (400, varios)</button>
+    </div>
+  </section>
+</div>
+
+@if (modalAbierto()) {
+  <app-modal
+    titulo="Formulario de ejemplo"
+    [ocupado]="guardando()"
+    (cerrar)="modalAbierto.set(false)"
+  >
+    <div class="campo">
+      <label for="ejemplo-nombre">Nombre del local</label>
+      <input id="ejemplo-nombre" type="text" placeholder="Kiosco El Sol" />
+    </div>
+    <div class="campo">
+      <label for="ejemplo-pago">Método de pago</label>
+      <select id="ejemplo-pago">
+        <option>Efectivo</option>
+        <option>Débito</option>
+        <option>Crédito</option>
+        <option>Transferencia</option>
+      </select>
+    </div>
+
+    @for (error of erroresModal(); track error) {
+      <p class="campo-error">{{ error }}</p>
+    }
+
+    <button acciones type="button" [disabled]="guardando()" (click)="guardarConError()">
+      Mandar con error
+    </button>
+    <button
+      acciones
+      type="button"
+      class="btn-primario"
+      [disabled]="guardando()"
+      (click)="guardarSimulado()"
+    >
+      {{ guardando() ? 'Guardando…' : 'Guardar (simulado)' }}
+    </button>
+  </app-modal>
+}
+
+@if (reciboAbierto(); as recibo) {
+  <app-modal
+    [titulo]="recibo.nombre"
+    [ancho]="true"
+    [textoCerrar]="null"
+    (cerrar)="reciboAbierto.set(null)"
+  >
+    <p class="texto-secundario">
+      {{ recibo.tiempoCompra | fecha }} · <span class="etiqueta">{{ recibo.metodoPago }}</span> ·
+      {{ recibo.productos.length }} {{ recibo.productos.length === 1 ? 'producto' : 'productos' }}
+    </p>
+    <app-tabla-productos
+      [productos]="recibo.productos"
+      [total]="recibo.total"
+      (editar)="editarProducto($event)"
+      (borrar)="borrarProducto($event)"
+    >
+      <button pie type="button" class="btn-primario" (click)="abrirNuevoProducto()">
+        Agregar producto
+      </button>
+    </app-tabla-productos>
+  </app-modal>
+
+  <!-- second modal, on top of the first one (it comes after it, so it is in front):
+       the form of a producto, new or with the data of the one being edited -->
+  @if (formularioProductoAbierto()) {
+    <app-modal
+      [titulo]="productoEditando() ? 'Editar producto' : 'Nuevo producto en ' + recibo.nombre"
+      [ocupado]="guardandoProducto()"
+      (cerrar)="formularioProductoAbierto.set(false)"
+    >
+      <div class="campo">
+        <label for="producto-nombre">Nombre</label>
+        <input
+          id="producto-nombre"
+          type="text"
+          placeholder="Yerba mate 1kg"
+          [value]="productoEditando()?.nombre ?? ''"
+        />
+      </div>
+      <div class="campo">
+        <label for="producto-cantidad">Cantidad</label>
+        <input
+          id="producto-cantidad"
+          type="number"
+          min="1"
+          step="1"
+          [value]="productoEditando()?.cantidad ?? 1"
+        />
+      </div>
+      <div class="campo">
+        <label for="producto-precio">Precio</label>
+        <input
+          id="producto-precio"
+          type="number"
+          step="0.01"
+          placeholder="4200"
+          [value]="productoEditando()?.precio ?? ''"
+        />
+      </div>
+
+      @for (error of erroresProducto(); track error) {
+        <p class="campo-error">{{ error }}</p>
+      }
+
+      <button
+        acciones
+        type="button"
+        [disabled]="guardandoProducto()"
+        (click)="guardarProductoConError(recibo)"
+      >
+        Mandar con error
+      </button>
+      <button
+        acciones
+        type="button"
+        class="btn-primario"
+        [disabled]="guardandoProducto()"
+        (click)="guardarProductoSimulado()"
+      >
+        {{ guardandoProducto() ? 'Guardando…' : 'Guardar (simulado)' }}
+      </button>
+    </app-modal>
+  }
+
+  <!-- confirmation to delete a producto, also on top of the modal of productos -->
+  @if (productoBorrando(); as p) {
+    <app-modal
+      titulo="Borrar producto"
+      [ocupado]="borrandoProducto()"
+      (cerrar)="productoBorrando.set(null)"
+    >
+      <p>
+        ¿Seguro que querés borrar <strong>{{ p.nombre }}</strong> del recibo de {{ recibo.nombre }}?
+      </p>
+      <p class="texto-secundario">
+        {{ p.cantidad }} × {{ p.precio | precio }} = {{ p.subtotal | precio }}. El total del recibo
+        se va a recalcular.
+      </p>
+      <button
+        acciones
+        type="button"
+        class="btn-peligro"
+        [disabled]="borrandoProducto()"
+        (click)="confirmarBorradoSimulado(p)"
+      >
+        {{ borrandoProducto() ? 'Borrando…' : 'Borrar (simulado)' }}
+      </button>
+    </app-modal>
+  }
+}

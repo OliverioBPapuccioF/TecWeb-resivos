@@ -1,0 +1,49 @@
+@if (productos.length === 0) {
+  <div class="vacio">Este recibo todavía no tiene productos.</div>
+} @else {
+  <div class="tabla-contenedor">
+    <table>
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th class="numero">Cantidad</th>
+          <th class="numero">Precio</th>
+          <th class="numero">Subtotal</th>
+          @if (conAcciones) {
+            <th>Acciones</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of productos; track p.id) {
+          <tr>
+            <td>{{ p.nombre }}</td>
+            <td class="numero">{{ p.cantidad }}</td>
+            <td class="numero">{{ p.precio | precio }}</td>
+            <td class="numero">{{ p.subtotal | precio }}</td>
+            @if (conAcciones) {
+              <td>
+                <div class="acciones">
+                  <button type="button" (click)="editar.emit(p)">Editar</button>
+                  <button type="button" class="btn-peligro" (click)="borrar.emit(p)">Borrar</button>
+                </div>
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+<!-- last line: the total on the left and, on the right, what the page puts with the attribute
+     "pie" (e.g. the "Agregar producto" button). Also when there are no productos -->
+<div class="linea-total">
+  @if (total !== undefined) {
+    <p class="total">
+      <span class="texto-secundario">Total del recibo</span>
+      <span class="precio">{{ total | precio }}</span>
+    </p>
+  }
+  <ng-content select="[pie]" />
+</div>

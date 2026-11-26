@@ -1,0 +1,27 @@
+@if (avisos.lista().length > 0) {
+  <div class="avisos" aria-live="polite">
+    @for (aviso of avisos.lista(); track aviso.id) {
+      <div
+        class="aviso"
+        [class.aviso--error]="aviso.tipo === 'error'"
+        [attr.role]="aviso.tipo === 'error' ? 'alert' : 'status'"
+      >
+        <div class="aviso__cabecera">
+          <span class="aviso__titulo">{{ aviso.titulo }}</span>
+          <button type="button" class="aviso__cerrar" (click)="avisos.cerrar(aviso.id)">
+            Cerrar
+          </button>
+        </div>
+        @if (aviso.mensajes.length === 1) {
+          <p>{{ aviso.mensajes[0] }}</p>
+        } @else {
+          <ul>
+            @for (m of aviso.mensajes; track m) {
+              <li>{{ m }}</li>
+            }
+          </ul>
+        }
+      </div>
+    }
+  </div>
+}

@@ -1,11 +1,12 @@
 import { Component, HostListener, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { AvisosComponent } from './components/avisos/avisos.component';
 
-// Root component: menu, the page of the current route and the footer.
+// Root component: menu, the page of the current route, the footer and the notices.
 // The background, the fonts and the colors are global: src/styles.css
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, AvisosComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })
