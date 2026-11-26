@@ -162,10 +162,18 @@ En Render:
 
 | Método | Ruta | Descripción | Respuesta OK |
 | ------ | ---- | ----------- | ------------ |
-| `GET`  | `/`  | Chequeo de que la API está viva (lo usa el front) | 200 |
+| `GET`  | `/`  | La API está viva. **No** consulta la base: lo usan el healthcheck de Docker y el de Render (reiniciar la API no arregla una base caída) | 200 |
+| `GET`  | `/salud` | La API **y la base de datos**: hace un `SELECT 1` con 3 s de límite (lo usa el front) | 200 / 503 |
 
-```json
+```jsonc
+// GET /
 { "status": "ok", "message": "API de recibos funcionando" }
+
+// GET /salud con la base andando (200)
+{ "api": "ok", "baseDeDatos": "ok" }
+
+// GET /salud con la base caída (503)
+{ "statusCode": 503, "message": "La base de datos no responde", "error": "Service Unavailable", "api": "ok", "baseDeDatos": "caida" }
 ```
 
 ### Recibos (`/resivo`)

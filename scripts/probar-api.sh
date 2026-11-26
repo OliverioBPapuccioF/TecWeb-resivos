@@ -31,6 +31,7 @@ chequear() {
 
 echo "Probando $API"
 chequear "API viva (GET /)" GET / 200 "" '.status == "ok"'
+chequear "base de datos viva (GET /salud)" GET /salud 200 "" '.baseDeDatos == "ok"'
 chequear "lista de recibos" GET /resivo 200 "" 'type == "array"'
 chequear "lista de productos" GET /producto 200 "" 'type == "array"'
 chequear "métodos de pago" GET /resivo/metodos-pago 200 "" 'length == 4'

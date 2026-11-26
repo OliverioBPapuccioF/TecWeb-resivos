@@ -28,6 +28,9 @@ const conexion = process.env.DATABASE_URL
     TypeOrmModule.forRoot({
       type: 'postgres',
       ...conexion,
+      // if the database does not answer, give up after 3 s (instead of waiting much longer):
+      // the request fails fast with a 500 and GET /salud says it is down
+      connectTimeoutMS: 3000,
       autoLoadEntities: true,
       // creates/updates the tables when the API starts (also on Render)
       synchronize: true,

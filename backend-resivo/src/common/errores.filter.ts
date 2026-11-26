@@ -57,7 +57,10 @@ export class ErroresFilter implements ExceptionFilter {
       message = 'El body no es un JSON válido';
     }
 
+    // extra fields of the error are kept (e.g. GET /salud adds api and baseDeDatos)
+    const extra = typeof cuerpo === 'object' ? cuerpo : {};
     response.status(statusCode).json({
+      ...extra,
       statusCode,
       message: message ?? exception.message,
       error: (cuerpo as { error?: string }).error ?? exception.name,
