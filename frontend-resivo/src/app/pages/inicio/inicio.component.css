@@ -47,8 +47,10 @@
   transform: none;
 }
 
-.grafico:hover {
-  transform: translate(-3px, -3px);
+@media (hover: hover) {
+  .grafico:hover {
+    transform: translate(-3px, -3px);
+  }
 }
 
 /* Chart.js needs a box with a height to draw in (maintainAspectRatio: false) */
@@ -59,4 +61,14 @@
 
 .lienzo--barras {
   height: 340px;
+}
+
+@media (max-width: 640px) {
+  .lienzo {
+    height: 340px;
+  }
+
+  .lienzo--barras {
+    height: 280px;
+  }
 }

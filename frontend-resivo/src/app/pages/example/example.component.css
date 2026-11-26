@@ -98,10 +98,12 @@
   border-radius: 50%;
 }
 
-.pestanas a:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 5px 5px 0 var(--violeta);
-  color: var(--gris-900);
+@media (hover: hover) {
+  .pestanas a:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0 var(--violeta);
+    color: var(--gris-900);
+  }
 }
 
 /* ...filled dot in the chosen test (blue = main action) */

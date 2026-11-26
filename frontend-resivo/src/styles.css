@@ -97,6 +97,7 @@
 
 html {
   scroll-behavior: smooth;
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -112,6 +113,7 @@ app-root {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 ::selection {
@@ -161,6 +163,12 @@ a {
 
 a:hover {
   color: var(--violeta);
+}
+
+a:focus-visible {
+  outline: 3px solid var(--turquesa-vecino);
+  outline-offset: 3px;
+  border-radius: 2px;
 }
 
 ul {
@@ -339,9 +347,11 @@ button {
   transition: transform var(--transicion), box-shadow var(--transicion), background-color var(--transicion);
 }
 
-button:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0 var(--btn-sombra);
+@media (hover: hover) {
+  button:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 var(--btn-sombra);
+  }
 }
 
 button:active {
@@ -466,9 +476,11 @@ textarea.ng-invalid.ng-touched {
   transform: rotate(-0.3deg);
 }
 
-.tarjeta:hover {
-  transform: rotate(0) translate(-3px, -3px);
-  box-shadow: 9px 9px 0 var(--sombra);
+@media (hover: hover) {
+  .tarjeta:hover {
+    transform: rotate(0) translate(-3px, -3px);
+    box-shadow: 9px 9px 0 var(--sombra);
+  }
 }
 
 .tarjeta__titulo {
@@ -589,6 +601,7 @@ td.numero {
   width: 100%;
   max-width: 560px;
   max-height: calc(100vh - 48px);
+  max-height: calc(100dvh - 48px);
   overflow-y: auto;
   background: var(--blanco);
   border: var(--borde);
@@ -723,6 +736,30 @@ td.numero {
     right: 16px;
     left: 16px;
     width: auto;
+  }
+
+  .modal-fondo {
+    padding: 12px;
+  }
+
+  .modal {
+    max-height: calc(100dvh - 24px);
+  }
+
+  .modal__acciones button {
+    flex: 1 1 auto;
+  }
+
+  .encabezado-pagina > button {
+    flex: 1 1 100%;
+  }
+}
+
+@media (pointer: coarse) {
+  .acciones button,
+  .modal__cerrar,
+  .aviso__cerrar {
+    min-height: 40px;
   }
 }
 
