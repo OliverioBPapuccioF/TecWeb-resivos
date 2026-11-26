@@ -1,0 +1,115 @@
+/* ===== Distribution ===== */
+:host {
+  display: block;
+  max-width: 1300px;
+  margin: 0 auto;
+}
+
+/* header: title + state of the API/database on top, tabs below
+   (the look comes from the global .encabezado-pagina) */
+.encabezado {
+  align-items: center;
+  gap: 0.8rem 1.2rem;
+}
+
+.titulo {
+  flex: 1;
+  min-width: 16rem;
+}
+
+.salud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.pestanas {
+  display: flex;
+  flex-wrap: wrap;
+  flex-basis: 100%;
+  gap: 0.8rem;
+}
+
+.cuerpo {
+  margin-top: 1.2rem;
+}
+
+.limpieza,
+.alerta {
+  margin: 1rem 0 0;
+}
+
+/* ===== State of the API and of the database (interactive, with the new style) ===== */
+/* turquoise = it works · deep red = it does not answer (red only for errors) · gray = no data */
+.indicador {
+  --tono: var(--gris-500);
+  padding: 4px 12px;
+  border: 2px solid var(--tono);
+  border-radius: var(--radio-chico);
+  background: color-mix(in srgb, var(--tono) 12%, var(--blanco));
+  box-shadow: 3px 3px 0 var(--sombra-suave);
+  color: var(--gris-900);
+  font-family: var(--fuente-interfaz);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transition:
+    border-color var(--transicion),
+    background-color var(--transicion);
+}
+.estado-ok {
+  --tono: var(--turquesa);
+}
+.estado-caida {
+  --tono: var(--rojo);
+  color: var(--rojo);
+  animation: latido 1.2s ease-in-out infinite;
+}
+
+/* ===== Tabs with dots (interactive, with the new style) ===== */
+.pestanas a {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 8px 14px;
+  border: var(--borde);
+  border-radius: var(--radio);
+  background: var(--blanco);
+  box-shadow: 3px 3px 0 var(--violeta);
+  color: var(--gris-900);
+  font-family: var(--fuente-interfaz);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  transition:
+    transform var(--transicion),
+    box-shadow var(--transicion);
+}
+
+/* empty dot... */
+.pestanas a::before {
+  content: '';
+  width: 0.65rem;
+  height: 0.65rem;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+}
+
+.pestanas a:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 var(--violeta);
+  color: var(--gris-900);
+}
+
+/* ...filled dot in the chosen test (blue = main action) */
+.pestanas a.activa {
+  background: var(--azul);
+  box-shadow: 3px 3px 0 var(--turquesa);
+  color: var(--blanco);
+}
+.pestanas a.activa::before {
+  background: currentColor;
+}

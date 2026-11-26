@@ -1,0 +1,69 @@
+<header class="encabezado encabezado-pagina">
+  <div class="titulo">
+    <h1>Prueba de la API</h1>
+    <p>
+      Cada cuadro es un pedido: lo que se manda y lo que responde
+      <code>{{ apiUrl }}</code>
+    </p>
+  </div>
+
+  <!-- state of the API and of the database (GET /salud, every 10 s and after a failure) -->
+  <div class="salud">
+    @for (parte of partes; track parte.nombre) {
+      <span class="indicador" [class]="'indicador estado-' + (parte.estado() ?? 'consultando')">
+        ● {{ parte.nombre }}:
+        @switch (parte.estado()) {
+          @case ('ok') {
+            funciona
+          }
+          @case ('caida') {
+            no responde
+          }
+          @case ('desconocida') {
+            sin datos
+          }
+          @default {
+            consultando…
+          }
+        }
+      </span>
+    }
+  </div>
+
+  <!-- tabs: the active one (routerLinkActive) gets the filled dot -->
+  <nav class="pestanas">
+    @for (p of pruebas; track p.ruta) {
+      <a [routerLink]="p.ruta" routerLinkActive="activa">{{ p.nombre }}</a>
+    }
+  </nav>
+</header>
+
+@if (limpiados() > 0) {
+  <p class="limpieza aviso">
+    @if (limpiados() === 1) {
+      🧹 Se borró 1 recibo de una prueba anterior que había quedado sin terminar.
+    } @else {
+      🧹 Se borraron {{ limpiados() }} recibos de pruebas anteriores que habían quedado sin
+      terminar.
+    }
+  </p>
+}
+
+@if (salud.api() === 'caida') {
+  <p class="alerta aviso aviso--error">
+    ⚠ La API no responde: los pedidos van a fallar sin conexión. ¿Está levantada?
+  </p>
+} @else if (salud.baseDeDatos() === 'caida') {
+  <p class="alerta aviso aviso--error">
+    ⚠ La base de datos no responde: los pedidos que la usan van a dar 500. Se puede seguir probando
+    para ver el error.
+  </p>
+}
+
+<div class="cuerpo">
+  @if (listo()) {
+    <router-outlet />
+  } @else {
+    <p class="esperando cargando">Limpiando pruebas anteriores…</p>
+  }
+</div>

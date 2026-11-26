@@ -1,0 +1,67 @@
+<div class="barra">
+  <p class="ayuda texto-secundario">
+    Cada columna va en orden: crear → ver → modificar → eliminar. Crear producto se habilita apenas
+    existe el recibo.
+  </p>
+  <button type="button" class="rehacer" [disabled]="limpiando()" (click)="rehacer()">
+    {{ limpiando() ? 'Limpiando…' : 'Rehacer el proceso' }}
+  </button>
+</div>
+
+@if (terminado()) {
+  <p class="aviso fin">
+    ✔ Recorrido completo.
+    @if (productoCancelado()) {
+      El recibo se eliminó antes que el producto, así que el producto se borró junto con él.
+    }
+  </p>
+}
+
+<div class="columnas">
+  @for (columna of columnas; track columna.nombre) {
+    <section class="columna">
+      <h2 class="titulo-seccion">
+        {{ columna.nombre }} <small class="texto-secundario">{{ columna.ruta }}</small>
+      </h2>
+
+      <!-- progress of the column: one block per step, with the color of its method -->
+      <ol class="progreso">
+        @for (p of columna.pasos; track p.clave) {
+          <li
+            [class]="'metodo-' + p.metodo.toLowerCase() + ' paso-' + estado(p)"
+            [title]="p.titulo"
+          >
+            @switch (estado(p)) {
+              @case ('ok') {
+                ✔ {{ p.numero }}
+              }
+              @case ('error') {
+                ✘ {{ p.numero }}
+              }
+              @case ('cancelado') {
+                ⊘ {{ p.numero }}
+              }
+              @default {
+                {{ p.numero }}
+              }
+            }
+          </li>
+        }
+      </ol>
+
+      @for (p of columna.pasos; track p.clave) {
+        <app-peticion
+          [numero]="p.numero"
+          [titulo]="p.titulo"
+          [metodo]="p.metodo"
+          [url]="url(p)"
+          [body]="body(p)"
+          [estado]="estado(p)"
+          [resultado]="resultados()[p.clave]"
+          [esperando]="esperando(p)"
+          (enviar)="enviar(p)"
+        />
+      }
+    </section>
+  }
+</div>

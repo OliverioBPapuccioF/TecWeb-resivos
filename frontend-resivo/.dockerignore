@@ -1,0 +1,14 @@
+# installed and compiled inside the image, never copied from your machine
+node_modules
+dist
+.angular
+out-tsc
+
+# not needed to build the app
+.git
+.vscode
+.idea
+*.log
+README.md
+Dockerfile
+.dockerignore

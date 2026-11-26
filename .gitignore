@@ -2,6 +2,11 @@
 backend-resivo/dist
 backend-resivo/node_modules
 backend-resivo/build
+frontend-resivo/dist
+frontend-resivo/node_modules
+frontend-resivo/tmp
+frontend-resivo/out-tsc
+frontend-resivo/bazel-out
 
 # TypeScript build cache
 *.tsbuildinfo
@@ -17,13 +22,19 @@ lerna-debug.log*
 
 # OS
 .DS_Store
+Thumbs.db
 
 # Tests
 backend-resivo/coverage
 backend-resivo/.nyc_output
+frontend-resivo/coverage
+frontend-resivo/testem.log
+frontend-resivo/libpeerconnection.log
+__screenshots__/
 
 # IDEs and editors
-backend-resivo/.idea
+.idea/
+.history/
 .project
 .classpath
 .c9/
@@ -67,3 +78,10 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # local production test of `make deploy` (credentials)
 /deploy/
+
+# Angular (from the .gitignore that `ng new` generated in frontend-resivo/)
+# .angular/ is the build cache of the Angular CLI
+frontend-resivo/.angular/
+frontend-resivo/.sass-cache/
+frontend-resivo/connect.lock
+frontend-resivo/typings

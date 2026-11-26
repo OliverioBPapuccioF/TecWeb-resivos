@@ -1,0 +1,13 @@
+<p class="ayuda texto-secundario">Se piden solas cada vez que se abre esta vista.</p>
+<div class="grilla">
+  @for (p of estadisticas; track p.clave) {
+    <app-peticion
+      [titulo]="p.titulo"
+      [metodo]="p.metodo"
+      [url]="url(p)"
+      [estado]="estadoLibre(p)"
+      [resultado]="resultados()[p.clave]"
+      [conBoton]="false"
+    />
+  }
+</div>

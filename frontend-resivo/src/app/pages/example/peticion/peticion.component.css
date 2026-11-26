@@ -1,0 +1,217 @@
+/* ===== Colors of each HTTP method (Swagger convention): --c, kept as they were ===== */
+.metodo-get {
+  --c: #61affe;
+}
+.metodo-post {
+  --c: #49cc90;
+}
+.metodo-patch {
+  --c: #50e3c2;
+}
+.metodo-delete {
+  --c: #f93e3e;
+}
+
+/* ===== Distribution ===== */
+.peticion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.cabecera {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cabecera h3 {
+  flex: 1;
+}
+
+.paneles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+/* narrow screens: one panel below the other */
+@media (max-width: 700px) {
+  .paneles {
+    grid-template-columns: 1fr;
+  }
+}
+
+.panel {
+  min-width: 0;
+}
+
+/* "Request" / "Response": same look as the global label (interface font) */
+.panel h4 {
+  margin: 0 0 0.3rem;
+  font-family: var(--fuente-interfaz);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--gris-700);
+}
+
+/* the answer grows up to 16rem and then scrolls (kept as it was) */
+pre {
+  max-height: 16rem;
+  margin: 0;
+  overflow: auto;
+}
+
+.enviar {
+  align-self: flex-start;
+}
+
+/* ===== Colors of the method label and of the status code (kept as they were) ===== */
+.metodo {
+  min-width: 4.2rem;
+  background: var(--c);
+  color: white;
+  text-align: center;
+}
+
+.status {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 0 0.3rem;
+  padding: 0.25rem 0.5rem;
+  color: white;
+}
+.status-ok {
+  background: #2e7d32;
+}
+.status-aviso {
+  background: #ef6c00;
+}
+.status-error {
+  background: #c62828;
+}
+
+/* ===== States of the box (interactive, with the new style) ===== */
+
+/* waiting for the previous step: gray and faded */
+.estado-bloqueado {
+  filter: grayscale(1);
+  opacity: 0.5;
+}
+
+/* it can not be done anymore: faded and crossed out */
+.estado-cancelado {
+  filter: grayscale(1);
+  opacity: 0.45;
+}
+.estado-cancelado .bloque__titulo {
+  text-decoration: line-through;
+}
+
+/* the next step to do: a hard shadow in the color of the method that pulses */
+.estado-listo {
+  animation: llamado 1.6s ease-in-out infinite;
+}
+@keyframes llamado {
+  50% {
+    box-shadow: 8px 8px 0 var(--c);
+  }
+}
+
+/* answered with an error: red edge (red only for errors) */
+.estado-error {
+  border-color: var(--rojo);
+}
+
+.numero {
+  display: grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 50%;
+  background: var(--gris-900);
+  color: var(--blanco);
+  font-family: var(--fuente-interfaz);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.marca {
+  color: var(--turquesa);
+  font-weight: 700;
+}
+.marca-error {
+  color: var(--rojo);
+}
+
+.sin-datos {
+  margin: 0;
+  color: var(--gris-500);
+  font-style: italic;
+}
+.parpadea {
+  animation: latido 1s ease-in-out infinite;
+}
+
+.mensajes {
+  margin: 0 0 0.3rem;
+  color: var(--rojo);
+}
+
+.candado {
+  margin: 0;
+  color: var(--gris-500);
+  font-family: var(--fuente-interfaz);
+  font-size: 0.8rem;
+}
+
+/* ===== Added by the style of /example (prompt 2) ===== */
+
+/* Cada pedido es una tarjeta. El acento alterna para dar caos,
+   sin tocar los colores de los métodos HTTP */
+.bloque {
+  --acento: var(--azul);
+  background: var(--blanco);
+  border: var(--borde);
+  border-top: 6px solid var(--acento);
+  border-radius: var(--radio-grande);
+  padding: 20px;
+  box-shadow: 5px 5px 0 var(--sombra);
+}
+
+:host(:nth-of-type(3n + 2)) .bloque {
+  --acento: var(--turquesa);
+}
+:host(:nth-of-type(3n)) .bloque {
+  --acento: var(--violeta);
+}
+
+.bloque__titulo {
+  font-family: var(--fuente-titulo);
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin: 0 0 12px;
+  text-shadow: 2px 2px 0 color-mix(in srgb, var(--acento) 35%, transparent);
+}
+
+/* Etiqueta del método: solo forma y fuente; los colores quedan los que ya tiene */
+.metodo {
+  display: inline-block;
+  font-family: var(--fuente-interfaz);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 10px;
+  border: 2px solid var(--gris-900);
+  border-radius: var(--radio-chico);
+  box-shadow: 2px 2px 0 var(--sombra);
+}
+
+/* Código de estado: solo fuente; los colores quedan los que ya tiene */
+.estado {
+  font-family: var(--fuente-interfaz);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}

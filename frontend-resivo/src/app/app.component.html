@@ -1,0 +1,21 @@
+<header class="nav" [class.nav--compacta]="compacta()">
+  <div class="contenedor nav__fila">
+    <a routerLink="/" class="nav__marca">Resivos</a>
+
+    <nav class="nav__links">
+      <a routerLink="/" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: true }"
+        >Inicio</a
+      >
+      <a routerLink="/recibos" routerLinkActive="activo">Recibos</a>
+      <a routerLink="/productos" routerLinkActive="activo">Productos</a>
+    </nav>
+  </div>
+</header>
+
+<main class="contenedor pagina">
+  <router-outlet />
+</main>
+
+<footer class="pie">
+  <div class="contenedor">Oliverio Papuccio · Tecnologías Web — TUARI · UNICEN · 2026</div>
+</footer>

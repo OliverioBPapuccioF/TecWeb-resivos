@@ -1,0 +1,17 @@
+<p class="ayuda texto-secundario">
+  Pedidos que fallan a propósito. Se pueden mandar en cualquier orden y repetir.
+</p>
+<div class="grilla">
+  @for (p of errores; track p.clave) {
+    <app-peticion
+      [titulo]="p.titulo"
+      [metodo]="p.metodo"
+      [url]="url(p)"
+      [body]="body(p)"
+      [estado]="estadoLibre(p)"
+      [resultado]="resultados()[p.clave]"
+      [repetible]="true"
+      (enviar)="enviar(p)"
+    />
+  }
+</div>

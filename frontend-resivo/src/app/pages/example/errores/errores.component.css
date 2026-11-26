@@ -1,0 +1,11 @@
+/* ===== Distribution ===== */
+.ayuda {
+  margin: 0 0 1rem;
+}
+
+/* two boxes per row on wide screens, one on narrow screens */
+.grilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 560px), 1fr));
+  gap: 0.9rem;
+}

@@ -1,0 +1,126 @@
+/* ===== Colors of the methods (Swagger convention), the same as the boxes: kept ===== */
+.metodo-get {
+  --c: #61affe;
+}
+.metodo-post {
+  --c: #49cc90;
+}
+.metodo-patch {
+  --c: #50e3c2;
+}
+.metodo-delete {
+  --c: #f93e3e;
+}
+
+/* ===== Distribution ===== */
+.barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.ayuda {
+  margin: 0;
+}
+
+.fin {
+  margin: 0 0 1rem;
+}
+
+/* the two columns, side by side (one below the other on narrow screens) */
+.columnas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+  align-items: start;
+}
+@media (max-width: 1000px) {
+  .columnas {
+    grid-template-columns: 1fr;
+  }
+}
+
+.columna {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  min-width: 0;
+}
+
+.progreso {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.progreso li {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  height: 1.9rem;
+}
+
+/* ===== Progress of each column (interactive, with the new style) ===== */
+.progreso li {
+  border: 2px solid var(--gris-900);
+  border-radius: var(--radio-chico);
+  background: var(--gris-100);
+  box-shadow: 2px 2px 0 var(--sombra-suave);
+  color: var(--gris-500);
+  font-family: var(--fuente-interfaz);
+  font-size: 0.8rem;
+  font-weight: 700;
+  transition: background-color 0.3s;
+}
+
+/* done: filled with the color of its method */
+.progreso .paso-ok {
+  background: var(--c);
+  color: var(--blanco);
+}
+/* next step: hard shadow in the color of its method, pulsing */
+.progreso .paso-listo,
+.progreso .paso-cargando {
+  background: var(--blanco);
+  color: var(--gris-900);
+  animation: llamado 1.6s ease-in-out infinite;
+}
+@keyframes llamado {
+  50% {
+    box-shadow: 4px 4px 0 var(--c);
+  }
+}
+/* failed: deep red (red only for errors) */
+.progreso .paso-error {
+  background: var(--rojo);
+  color: var(--blanco);
+}
+/* cancelled: striped and crossed out */
+.progreso .paso-cancelado {
+  background: repeating-linear-gradient(45deg, var(--gris-100) 0 6px, var(--gris-50) 6px 12px);
+  color: var(--gris-300);
+  text-decoration: line-through;
+}
+
+/* ===== Added by the style of /example (prompt 2) ===== */
+
+/* Títulos de sección que no son h2 */
+.titulo-seccion {
+  font-family: var(--fuente-titulo);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--gris-900);
+  text-shadow: 2px 2px 0 var(--turquesa-vecino);
+  margin: 0 0 16px;
+}
+
+.titulo-seccion small {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-shadow: none;
+}

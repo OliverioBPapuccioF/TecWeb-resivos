@@ -1,0 +1,83 @@
+<article class="peticion bloque" [class]="'metodo-' + metodo.toLowerCase() + ' estado-' + estado">
+  <header class="cabecera">
+    @if (numero) {
+      <span class="numero">{{ numero }}</span>
+    }
+    <span class="metodo">{{ metodo }}</span>
+    <h3 class="bloque__titulo">{{ titulo }}</h3>
+    @if (estado === 'ok') {
+      <span class="marca" title="Hecho">✔</span>
+    } @else if (estado === 'error') {
+      <span class="marca marca-error" title="Falló">✘</span>
+    }
+  </header>
+
+  <code class="url">{{ url }}</code>
+
+  <div class="paneles">
+    <section class="panel">
+      <h4>Request</h4>
+      @if (body !== undefined) {
+        <pre>{{ body | json }}</pre>
+      } @else {
+        <p class="sin-datos">Sin body</p>
+      }
+    </section>
+
+    <section class="panel">
+      <h4>Response</h4>
+      @if (estado === 'cargando') {
+        <p class="sin-datos parpadea">Esperando la respuesta…</p>
+      } @else if (resultado) {
+        <p class="status estado" [class]="claseStatus()">
+          <strong>{{ resultado.status || 'Sin conexión' }}</strong>
+          <span>{{ resultado.ms }} ms</span>
+        </p>
+        @if (resultado.mensajes) {
+          <ul class="mensajes">
+            @for (m of resultado.mensajes; track m) {
+              <li>{{ m }}</li>
+            }
+          </ul>
+        }
+        <pre>{{ resultado.cuerpo | json }}</pre>
+      } @else {
+        <p class="sin-datos">Todavía no se envió</p>
+      }
+    </section>
+  </div>
+
+  @if (estado === 'bloqueado' && esperando) {
+    <p class="candado">Bloqueado: {{ esperando }}</p>
+  } @else if (estado === 'cancelado') {
+    <p class="candado">⊘ {{ esperando }}</p>
+  }
+  @if (conBoton) {
+    <button
+      type="button"
+      class="enviar"
+      [class.btn-primario]="metodo !== 'DELETE'"
+      [class.btn-peligro]="metodo === 'DELETE'"
+      [disabled]="botonDeshabilitado()"
+      (click)="enviar.emit()"
+    >
+      @switch (estado) {
+        @case ('cargando') {
+          Enviando…
+        }
+        @case ('ok') {
+          {{ repetible ? 'Enviar de nuevo' : 'Hecho' }}
+        }
+        @case ('error') {
+          Reintentar
+        }
+        @case ('cancelado') {
+          No se puede
+        }
+        @default {
+          Enviar {{ metodo }}
+        }
+      }
+    </button>
+  }
+</article>
