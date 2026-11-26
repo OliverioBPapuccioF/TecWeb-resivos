@@ -135,10 +135,14 @@ La dirección de la API se escribe en **un solo lugar**: `src/environments/`.
 | Archivo | Lo usa | `apiUrl` |
 | ------- | ------ | -------- |
 | `environment.development.ts` | `npm start` (`ng serve`) | `http://localhost:3000` |
-| `environment.ts` | `npm run build` y la imagen de Docker | `http://localhost:3000` (al deployar: la URL real de la API, sin `/` al final) |
+| `environment.ts` | `npm run build` (el deploy en **Netlify**) | `https://resivos-api.onrender.com` (la API en Render, sin `/` al final) |
+| `environment.docker.ts` | la imagen de Docker (`ng build --configuration production,docker`) | `http://localhost:3000` |
 
-Los dos tienen los mismos campos (`production`, `nombreApp`, `apiUrl`); Angular reemplaza uno
-por el otro al compilar (`fileReplacements` en `angular.json`). Los servicios usan
+Los tres tienen los mismos campos (`production`, `nombreApp`, `apiUrl`). Angular compila con
+`environment.ts` y, según la configuración, lo reemplaza por otro (`fileReplacements` en
+`angular.json`: `development` y `docker`). Así el mismo código sirve para los tres destinos:
+si `environment.ts` se usara también en Docker, al poner la URL de Render el Docker local
+llamaría a Render (y con `localhost`, Netlify llamaría a la PC de quien abre la página). Los servicios usan
 `environment.apiUrl`, nunca una URL escrita a mano. Para comprobarlo:
 
 ```bash
@@ -173,16 +177,63 @@ también de ahí.
 ## Con Docker
 
 La imagen se construye en dos etapas: Node compila la app y **nginx** sirve los archivos
-estáticos. `nginx.conf` responde `index.html` en cualquier ruta (si no, refrescar el
-navegador en `/recibos` daría 404).
+estáticos (la imagen final pesa ~100 MB y no tiene Node). `nginx.conf` responde `index.html`
+en cualquier ruta (si no, refrescar el navegador en `/recibos` daría 404), no cachea
+`index.html`, cachea los `.js`/`.css` (tienen un hash en el nombre) y comprime con gzip.
+
+Se levanta junto con la API y la base desde la **raíz del repo**:
+
+```bash
+make levantar     # los tres contenedores: front en localhost:4200
+make probar-web   # prueba el front (make probar = API + front)
+```
+
+- Usa el mismo puerto que `ng serve` (4200, `WEB_PORT_HOST` en el `.env` de la raíz): no se
+  pueden tener los dos a la vez. Para desarrollar, `make dev` apaga el front y la API de
+  Docker.
+- El contenedor `web` está **solo en la red `red-web`**: no ve a la base ni a la API por la
+  red de Docker. No le hace falta: el código de Angular corre **en el navegador**, que le pide
+  los datos a la API por `localhost:3000` (el `apiUrl` de `environment.ts`, que queda dentro
+  del build). Por eso tampoco hace falta un proxy.
+- `/example` también está en el build de producción.
+
+`scripts/probar-web.sh` (en la raíz) chequea:
+- que el contenedor esté healthy
+- que `/`, `/recibos`, `/productos` y `/example/recorrido` respondan la app, y que un archivo
+  que no existe dé 404
+- los encabezados de caché y la compresión
+- que el build apunte a la API y que la API acepte el origen del front (CORS)
+- las redes: `web` está solo en `red-web` y no resuelve `db` ni `api`
+
+Solo la imagen, sin el compose:
 
 ```bash
 docker build -t frontend-resivo .
 docker run --rm -p 4200:80 frontend-resivo
 ```
 
-El código de Angular corre **en el navegador**, no en el contenedor: el navegador le pide los
-datos a la API directamente, así que no hace falta un proxy.
+## Deploy (Render + Netlify)
+
+La API y la base van a **Render** (`render.yaml` de la raíz) y el front a **Netlify**
+(`netlify.toml` de la raíz). Netlify compila solo `frontend-resivo/` (`base`), con Node 24,
+corriendo `npm run build`, y publica `dist/frontend-resivo/browser`. `public/_redirects`
+(`/*  /index.html  200`) hace en Netlify lo mismo que `try_files` en nginx: refrescar en
+`/recibos` no da 404 (los archivos que existen, como `main-*.js`, se sirven igual).
+
+Cada paso necesita la URL del anterior, así que van en este orden:
+
+1. **Render:** Dashboard → New → Blueprint → este repo. Pide `CORS_ORIGIN`: poné por ahora
+   `http://localhost:4200`. Copiá la URL de la API (`https://resivos-api.onrender.com` si el
+   nombre estaba libre) y probala: `make probar-api API=https://<api>.onrender.com`.
+2. Si la URL es otra, cambiala en `src/environments/environment.ts` → commit y push.
+3. **Netlify:** Add new project → Import an existing project → este repo (lee `netlify.toml`,
+   no hace falta configurar nada). Copiá la URL del front (`https://<sitio>.netlify.app`).
+4. **Render** → el servicio `resivos-api` → Environment → `CORS_ORIGIN` = la URL de Netlify,
+   exacta y sin `/` al final → "Save and deploy".
+5. Datos de ejemplo: `make seed API=https://<api>.onrender.com`.
+
+> ⚠ Plan gratis de Render: la API se duerme a los 15 minutos sin uso (el primer pedido tarda
+> ~1 minuto: el front lo avisa) y la base **vence a los 30 días** de creada.
 
 ## Decisiones del proyecto
 

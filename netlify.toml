@@ -1,0 +1,20 @@
+# Netlify: deploys ONLY the frontend (frontend-resivo/) from this monorepo.
+# It is at the root of the repo because that is where Netlify looks for it without any
+# setting in its dashboard; `base` tells it where the frontend is.
+# Reference: https://docs.netlify.com/configure-builds/file-based-configuration/
+#
+# - Paths are relative to `base`: npm ci + npm run build run inside frontend-resivo/.
+# - `npm run build` = `ng build` = the production build, with src/environments/environment.ts
+#   (apiUrl = the API on Render). The Docker image uses environment.docker.ts instead.
+# - Refreshing on /recibos: frontend-resivo/public/_redirects (/* -> /index.html 200),
+#   copied into the published folder by the build.
+# - The API must allow this site: CORS_ORIGIN = https://<site>.netlify.app on Render.
+
+[build]
+  base = "frontend-resivo"
+  command = "npm run build"
+  publish = "dist/frontend-resivo/browser"
+
+[build.environment]
+  # Angular 22 needs Node ^22.22.3 || ^24.15.0 || >=26 (24 = the latest 24.x)
+  NODE_VERSION = "24"

@@ -11,7 +11,9 @@ s ?=
 -include .env
 DB_PORT_HOST ?= 5432
 API_PORT_HOST ?= 3000
+WEB_PORT_HOST ?= 4200
 API ?= http://localhost:$(API_PORT_HOST)
+WEB ?= http://localhost:$(WEB_PORT_HOST)
 
 # deploy: version of the images = version of backend-resivo/package.json
 # (read with sed, available everywhere; "=" instead of ":=" so it is only read by the
@@ -21,7 +23,7 @@ PROD_PORT ?= 8080
 PROD := VERSION=$(VERSION) PROD_PORT=$(PROD_PORT) docker compose -f docker-compose.prod.yml
 
 .DEFAULT_GOAL := ayuda
-.PHONY: ayuda levantar dev reiniciar apagar estado logs seed probar borrar borrar-todo deploy deploy-borrar
+.PHONY: ayuda levantar dev reiniciar apagar estado logs seed probar probar-api probar-web borrar borrar-todo deploy deploy-borrar
 
 ayuda: ## Muestra esta ayuda
 	@echo "Uso: make <comando> [s=servicio]"
@@ -31,15 +33,17 @@ ayuda: ## Muestra esta ayuda
 levantar: ## Construye las imágenes y levanta todo (espera a que esté healthy)
 	$(COMPOSE) up -d --build --wait $(s)
 	@echo
-	@echo "Listo:  API -> $(API)   Base -> localhost:$(DB_PORT_HOST)"
+	@echo "Listo:  Front -> $(WEB)   API -> $(API)   Base -> localhost:$(DB_PORT_HOST)"
 
-dev: ## Levanta solo la base (y apaga la API de Docker) para correr el back en tu máquina
-	@# the api container uses the same port as npm run start:dev, so it is stopped first
-	$(COMPOSE) stop api
+dev: ## Levanta solo la base (y apaga la API y el front de Docker) para correr todo en tu máquina
+	@# the api and web containers use the same ports as npm run start:dev and ng serve,
+	@# so they are stopped first
+	$(COMPOSE) stop api web
 	$(COMPOSE) up -d --build --wait db
 	@echo
-	@echo "Base lista en localhost:$(DB_PORT_HOST). Ahora, en otra terminal:"
+	@echo "Base lista en localhost:$(DB_PORT_HOST). Ahora, cada uno en otra terminal:"
 	@echo "  cd backend-resivo && npm run start:dev"
+	@echo "  cd frontend-resivo && npm start"
 
 reiniciar: ## Reinicia los contenedores (para cambios de código: make levantar)
 	$(COMPOSE) restart $(s)
@@ -56,8 +60,13 @@ logs: ## Sigue los logs (Ctrl+C para salir)
 seed: ## Carga 30 recibos y 200 productos de ejemplo (API levantada, base vacía)
 	@API=$(API) bash database/seed.sh
 
-probar: ## Prueba rápida de la API (otra URL: make probar API=https://...)
+probar: probar-api probar-web ## Prueba la API y el front levantados con make levantar
+
+probar-api: ## Prueba rápida de la API (otra URL: make probar-api API=https://...)
 	@bash scripts/probar-api.sh $(API)
+
+probar-web: ## Prueba el contenedor del front: rutas, caché, CORS y redes (no ve a la base)
+	@bash scripts/probar-web.sh $(WEB) $(API)
 
 borrar: ## Borra contenedores, redes e imágenes del proyecto (los datos quedan)
 	$(COMPOSE) down --rmi local --remove-orphans $(s)
@@ -111,7 +120,7 @@ deploy: ## Construye las imágenes versionadas y las prueba como en producción
 	@echo "Listo para deployar la versión $(VERSION). En Render:"
 	@echo "  1. Primera vez: Dashboard -> New -> Blueprint -> este repo (lee render.yaml)."
 	@echo "  2. Después: cada git push a main deploya solo."
-	@echo "  3. Probar la API de Render: make probar API=https://<tu-servicio>.onrender.com"
+	@echo "  3. Probar la API de Render: make probar-api API=https://<tu-servicio>.onrender.com"
 
 deploy-borrar: ## Borra la prueba de producción local (contenedores, imágenes, datos y credenciales)
 	$(PROD) down --volumes

@@ -1,12 +1,14 @@
-// PRODUCTION settings: used by `ng build` (and by the Docker image).
-// In development (`ng serve`) Angular uses environment.development.ts instead
-// (see "fileReplacements" in angular.json). Both files must have the same fields.
+// PRODUCTION settings for the DEPLOY (Netlify): used by `ng build` / `npm run build`.
+// The other builds replace this file (see "fileReplacements" in angular.json):
+//   ng serve                                   -> environment.development.ts
+//   ng build --configuration production,docker -> environment.docker.ts (the Docker image)
+// The three files must have the same fields.
 //
 // apiUrl is the ONLY place where the address of the API is written: the services read it
-// from here. For now it is the API on your machine (Docker publishes it on localhost:3000);
-// when the app is deployed, put here the real URL of the API (without "/" at the end).
+// from here. It is the API deployed on Render (without "/" at the end). The name comes from
+// render.yaml (resivos-api): check the real URL in the Render dashboard after creating it.
 export const environment = {
   production: true,
   nombreApp: 'Resivos',
-  apiUrl: 'http://localhost:3000',
+  apiUrl: 'https://resivos-api.onrender.com',
 };

@@ -38,7 +38,7 @@ erDiagram
 - Docker con Docker Compose
 - Opcionales, solo para los comandos `make`:
   - `make`
-  - `curl` y `jq`: los usan `make seed` y `make probar`
+  - `curl` y `jq`: los usan `make seed` y `make probar-api`
   - `openssl`: lo usa `make deploy` para generar la contraseña de prueba
 
 ### Sin `make`
@@ -54,7 +54,7 @@ Todo lo de Docker se puede hacer con `docker compose`, desde la raíz del repo:
 | `make apagar` | `docker compose stop` |
 | `make borrar` | `docker compose down --rmi local` |
 | `make seed` | `bash database/seed.sh` |
-| `make probar` | `bash scripts/probar-api.sh http://localhost:3000` |
+| `make probar-api` | `bash scripts/probar-api.sh http://localhost:3000` (`make probar` corre también la prueba del front) |
 
 ## Cómo levantarlo
 
@@ -149,9 +149,12 @@ make deploy-borrar   # borra esa prueba local (contenedores, imágenes, datos y 
 En Render:
 
 1. La primera vez: **Dashboard → New → Blueprint** y elegir este repo. Pide `CORS_ORIGIN`
-   (la URL del front cuando esté deployado).
+   (la URL del front en Netlify, `https://<sitio>.netlify.app`, sin `/` al final; si todavía
+   no existe, `http://localhost:4200`). Render la pide solo al crear el Blueprint: después se
+   cambia en el servicio → **Environment** → "Save and deploy". Los pasos completos, con el
+   front, están en el README de `frontend-resivo`.
 2. Después, cada `git push` a `main` deploya solo.
-3. Para probar la API deployada: `make probar API=https://<tu-servicio>.onrender.com`
+3. Para probar la API deployada: `make probar-api API=https://<tu-servicio>.onrender.com`
 
 > ⚠ Plan gratis: el servicio se duerme sin uso (el primer pedido tarda ~1 minuto) y la base
 > **vence a los 30 días** (14 días más de gracia; después Render la borra con sus datos).

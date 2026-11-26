@@ -30,8 +30,9 @@ services:
         fromDatabase:
           name: resivos-db
           property: connectionString
-      # URL of the frontend allowed by CORS: Render asks for it when the Blueprint is
-      # created (put the URL of the frontend once it is deployed, e.g. https://....onrender.com)
+      # URL of the frontend allowed by CORS: the site on Netlify, exactly, without "/" at the
+      # end (e.g. https://resivos.netlify.app). Render asks for it ONLY when the Blueprint is
+      # created; to change it later: service -> Environment -> "Save and deploy".
       - key: CORS_ORIGIN
         sync: false
       - key: TZ

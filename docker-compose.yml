@@ -1,12 +1,13 @@
-# Whole project: database + API (the frontend is added in step 20).
+# Whole project: database + API + frontend.
 #   make levantar   -> builds and starts everything
 #   make            -> list of all the commands
 #
 # Networks:
 #   red-db  = api + db   (the API reaches the database by the name of its service: "db")
-#   red-web = web        (the frontend; it does NOT see the database)
-# The browser reaches the API through the published port (localhost:3000),
-# so the frontend container does not need to be in red-db.
+#   red-web = web        (the frontend, alone: it does NOT see the database nor the API)
+# The Angular code runs in the BROWSER and calls the API through its published port
+# (localhost:3000); the web container only serves files, so it does not need red-db.
+# Check it with: make probar-web
 
 # fixed project name: containers are resivos-db-1, resivos-api-1, ... in any folder
 name: resivos
@@ -53,7 +54,20 @@ services:
     networks:
       - red-db
 
+  # Angular app served by nginx, built from frontend-resivo/Dockerfile
+  # (its healthcheck is in that Dockerfile). The address of the API is inside the build
+  # (src/environments/environment.ts), so it does not need any variable here.
+  web:
+    build: ./frontend-resivo
+    restart: unless-stopped
+    ports:
+      # the API only accepts requests (CORS) from the origin in CORS_ORIGIN (localhost:4200)
+      - "${WEB_PORT_HOST:-4200}:80"
+    # no depends_on: it only serves files; if the API is not up yet, the app shows the
+    # error with "Reintentar"
+    networks:
+      - red-web
+
 networks:
   red-db:
-  # used by the web service (step 20)
   red-web:

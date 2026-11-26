@@ -15,7 +15,10 @@ RUN npm ci
 
 # source code (.dockerignore leaves out node_modules, dist, .angular, ...)
 COPY . .
-RUN npx ng build
+# production build (optimized, hashed names, budgets) + "docker": environment.docker.ts
+# instead of environment.ts, so the app calls the API of docker-compose (localhost:3000)
+# and not the one deployed on Render. The configurations are applied from left to right.
+RUN npx ng build --configuration production,docker
 
 # ---------- stage 2: final ----------
 FROM nginx:1.30-alpine
@@ -28,6 +31,8 @@ COPY --from=build /app/dist/frontend-resivo/browser /usr/share/nginx/html
 
 EXPOSE 80
 
-# healthy when nginx answers the home page (wget comes with alpine)
+# healthy when nginx answers the home page (wget comes with alpine).
+# 127.0.0.1 and not "localhost": inside the container localhost is first ::1 (IPv6),
+# and nginx listens only on IPv4 (listen 80), so wget would get "Connection refused"
 HEALTHCHECK --interval=10s --timeout=5s --start-period=5s --retries=3 \
-  CMD wget -q -O /dev/null http://localhost/ || exit 1
+  CMD wget -q -O /dev/null http://127.0.0.1/ || exit 1
