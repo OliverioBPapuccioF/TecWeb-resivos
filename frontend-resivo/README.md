@@ -6,11 +6,12 @@ Consume la API REST del repo del back (`backend-resivo`). TP de Tecnologías Web
 Pantallas: **Inicio** (`/`, últimos recibos y gráficos), **Recibos** (`/recibos`, CRUD de recibos
 y sus productos) y **Productos** (`/productos`, todos los productos). El detalle está más abajo.
 Deployada en **https://resivos.netlify.app** (la API, en https://resivos-api.onrender.com).
+Repo del back (API, base de datos y colección de Postman): https://github.com/OliverioBPapuccioF/resivos-backend
 
 ## Requisitos
 
 - Node.js 22.22, 24.15 o 26 (o superior)
-- La API levantada en `http://localhost:3000` (en el repo del back: `make levantar`)
+- La API levantada en `http://localhost:3000` (en el [repo del back](https://github.com/OliverioBPapuccioF/resivos-backend): `make levantar`)
 
 ## Cómo correrlo
 
@@ -240,7 +241,7 @@ docker run --rm -p 4200:80 frontend-resivo
 
 ## Deploy (Render + Netlify)
 
-La API y la base van a **Render** (`render.yaml` del repo del back) y el front a **Netlify**
+La API y la base van a **Render** (`render.yaml` del [repo del back](https://github.com/OliverioBPapuccioF/resivos-backend)) y el front a **Netlify**
 (`netlify.toml` de este repo). Netlify compila con Node 24 corriendo `npm run build`, y publica
 `dist/frontend-resivo/browser`. Antes de deployar, `make deploy` hace lo mismo en tu máquina y
 revisa el resultado (que tenga `_redirects`, que llame a la URL de `environment.ts` y que no
@@ -250,7 +251,7 @@ quede `localhost:3000`). `public/_redirects`
 
 Cada paso necesita la URL del anterior, así que van en este orden:
 
-1. **Render:** Dashboard → New → Blueprint → el repo del back. Pide `CORS_ORIGIN`: poné por ahora
+1. **Render:** Dashboard → New → Blueprint → el [repo del back](https://github.com/OliverioBPapuccioF/resivos-backend). Pide `CORS_ORIGIN`: poné por ahora
    `http://localhost:4200`. Copiá la URL de la API (`https://resivos-api.onrender.com` si el
    nombre estaba libre) y probala (en el repo del back): `make probar-api API=https://<api>.onrender.com`.
 2. Si la URL es otra, cambiala en `src/environments/environment.ts` → commit y push.

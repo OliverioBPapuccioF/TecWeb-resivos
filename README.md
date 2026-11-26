@@ -5,6 +5,8 @@ lo que se gasta. Trabajo Práctico de **Tecnologías Web** (TUARI, UNICEN).
 
 - **Front:** https://resivos.netlify.app (Angular 22, en Netlify)
 - **API:** https://resivos-api.onrender.com (NestJS + PostgreSQL, en Render)
+- **Repo del back:** https://github.com/OliverioBPapuccioF/resivos-backend
+- **Repo del front:** https://github.com/OliverioBPapuccioF/resivos-frontend
 
 > La API está en el plan gratis de Render: se duerme a los 15 minutos sin uso y el primer
 > pedido después tarda ~1 minuto (el front avisa que "la API está tardando").
@@ -18,8 +20,8 @@ Cada carpeta se pasa a su repo con `git subtree`, que conserva su historial de c
 ```bash
 git subtree split --prefix=backend-resivo -b back     # rama solo con backend-resivo/
 git subtree split --prefix=frontend-resivo -b front   # rama solo con frontend-resivo/
-git push <url-del-repo-del-back> back:main
-git push <url-del-repo-del-front> front:main
+git push git@github.com:OliverioBPapuccioF/resivos-backend.git back:main
+git push git@github.com:OliverioBPapuccioF/resivos-frontend.git front:main
 ```
 
 Cada carpeta es un proyecto completo: su `.gitignore`, `.env.example`, `docker-compose.yml`,
@@ -92,9 +94,9 @@ demás están en cada carpeta: `make -C backend-resivo` (`borrar-todo`, `deploy`
 
 ## Deploy
 
-- **Render** (`backend-resivo/render.yaml`), desde el repo del back: construye su
+- **Render** (`backend-resivo/render.yaml`), desde el [repo del back](https://github.com/OliverioBPapuccioF/resivos-backend): construye su
   `Dockerfile` y crea un Postgres administrado. `CORS_ORIGIN` = la URL de Netlify.
-- **Netlify** (`frontend-resivo/netlify.toml`), desde el repo del front: compila con
+- **Netlify** (`frontend-resivo/netlify.toml`), desde el [repo del front](https://github.com/OliverioBPapuccioF/resivos-frontend): compila con
   `npm run build`, que usa `src/environments/environment.ts` (la URL de la API en Render). La
   imagen de Docker usa `environment.docker.ts` (`localhost:3000`).
 - Cada `git push` a cada repo deploya su parte. Antes, `make -C backend-resivo deploy` prueba

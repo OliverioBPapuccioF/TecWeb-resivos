@@ -8,6 +8,7 @@ repo, y lo usa con la URL de la API.
 
 - **API deployada:** https://resivos-api.onrender.com
 - **Front:** https://resivos.netlify.app
+- **Repo del front:** https://github.com/OliverioBPapuccioF/resivos-frontend
 
 ## Modelo de datos
 
@@ -170,7 +171,7 @@ En Render:
    (la URL del front en Netlify, `https://<sitio>.netlify.app`, sin `/` al final; si todavía
    no existe, `http://localhost:4200`). Render la pide solo al crear el Blueprint: después se
    cambia en el servicio → **Environment** → "Save and deploy". Los pasos completos, con el
-   front, están en el README del repo del front.
+   front, están en el README del [repo del front](https://github.com/OliverioBPapuccioF/resivos-frontend).
 2. Después, cada `git push` a la rama del Blueprint deploya solo.
 3. Para probar la API deployada: `make probar-api API=https://<tu-servicio>.onrender.com`
 
