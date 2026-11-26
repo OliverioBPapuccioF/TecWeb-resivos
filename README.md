@@ -89,5 +89,8 @@ Los pasos completos están en el README del front ("Deploy").
 
 ## Conversación con el CLI
 
-El trabajo se hizo con Claude Code; las conversaciones exportadas están en la raíz
-(`conversation-*.txt`).
+El trabajo se hizo con Claude Code; las conversaciones exportadas están en la raíz:
+
+- `conversation-2026-10-22-175319.txt`: primera entrega (backend).
+- `front-end-claude.md`: segunda entrega (frontend, Docker y deploy), con las revisiones de
+  la skill de la cátedra.
